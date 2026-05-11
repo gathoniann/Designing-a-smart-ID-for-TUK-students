@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUK Smart ID | Student Portal Integration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .tuk-green { background-color: #006400; } 
+        .text-tuk-green { color: #006400; }
+        .border-tuk-green { border-color: #006400; }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-reveal { animation: slideUp 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+    <header class="bg-white border-b-4 border-tuk-green shadow-md mb-8">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center gap-4">
+                <img src="https://www.tukenya.ac.ke/sites/default/files/logo_0.png" alt="TUK Logo" class="h-20 w-auto">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-tuk-green uppercase tracking-tight">Technical University of Kenya</h1>
+                    <p class="text-sm font-semibold text-gray-500 uppercase tracking-widest">NFC-Based Smart ID System [cite: 1]</p>
+                    <a href="student.html" class="text-tuk-green hover:text-green-800 text-sm font-semibold underline">Student Portal</a>
+                </div>
+            </div>
+            <div class="text-center md:text-right mt-4 md:mt-0">
+                <div id="clock" class="text-2xl font-bold text-gray-700">00:00:00</div>
+                <p id="current-date" class="text-xs font-bold text-tuk-green uppercase">Saturday, May 9, 2026</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-12">
+        
+        <section class="lg:col-span-7">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                <div class="tuk-green p-4">
+                    <h2 class="text-white font-bold uppercase tracking-wider flex items-center gap-2">
+                        <span>📡</span> Real-Time Verification Terminal [cite: 195]
+                    </h2>
+                </div>
+                
+                <div class="p-8">
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Scan Student ID / Enter UID [cite: 75]</label>
+                        <input type="text" id="nfcInput" autofocus
+                               placeholder="Waiting for card tap..." 
+                               class="w-full bg-gray-50 border-2 border-gray-300 rounded p-4 text-2xl font-mono focus:border-tuk-green focus:ring-0 transition-all outline-none text-center uppercase">
+                    </div>
+                    
+                    <button onclick="verifyStudent()" 
+                            class="w-full tuk-green text-white py-4 rounded font-bold text-lg uppercase hover:bg-green-800 transition-colors shadow-md">
+                        Verify Student Identity
+                    </button>
+
+                    <div id="resultDisplay" class="hidden mt-8 p-6 rounded-lg border-2 text-center animate-reveal">
+                        <h3 id="statusTitle" class="text-2xl font-black mb-4"></h3>
+                        <div class="flex flex-col items-center">
+                            <div id="statusIcon" class="text-5xl mb-4"></div>
+                            <h4 id="studentName" class="text-3xl font-bold text-gray-800 uppercase"></h4>
+                            <p id="regNumber" class="text-lg font-semibold text-gray-500 mt-1"></p>
+                            <p id="errorMessage" class="text-lg font-bold mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="lg:col-span-5">
+            <div class="bg-white rounded-lg shadow-lg border border-gray-200 h-full flex flex-col">
+                <div class="bg-gray-100 border-b border-gray-200 p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-tuk-green font-bold uppercase text-sm">Recent Activity Logs</h2>
+                        <span class="animate-pulse flex items-center gap-1">
+                            <span class="h-2 w-2 bg-red-500 rounded-full"></span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">Live Feed</span>
+                        </span>
+                    </div>
+                    
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">🔍</span>
+                        <input type="text" id="logSearch" onkeyup="filterLogs()" 
+                               placeholder="Filter logs by student name..." 
+                               class="w-full pl-10 p-2 text-xs border rounded border-gray-300 outline-none focus:border-tuk-green bg-white">
+                    </div>
+                </div>
+                
+                <div id="logTable" class="p-4 space-y-3 overflow-y-auto max-h-[500px] flex-grow">
+                    <p class="text-center text-gray-400 italic text-sm py-10">System active. Awaiting input...</p>
+                </div>
+                
+                <div class="p-3 bg-gray-50 border-t border-gray-200 text-[10px] text-gray-400 text-center font-bold uppercase tracking-widest">
+                    Displaying last 10 attempts 
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // STEP 3: SEARCH LOGIC
+        function filterLogs() {
+            const input = document.getElementById('logSearch').value.toUpperCase();
+            const logEntries = document.getElementsByClassName('log-entry');
+            
+            for (let i = 0; i < logEntries.length; i++) {
+                const text = logEntries[i].textContent || logEntries[i].innerText;
+                logEntries[i].style.display = text.toUpperCase().includes(input) ? "" : "none";
+            }
+        }
+
+        async function verifyStudent() {
+            const uidField = document.getElementById('nfcInput');
+            const uid = uidField.value.trim();
+            if(!uid) return;
+
+            try {
+                const res = await fetch('http://localhost:3000/verify', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({nfc_uid: uid})
+                });
+                const data = await res.json();
+                
+                updateUI(data);
+                updateLogs();
+                uidField.value = ""; 
+                uidField.focus();
+            } catch (err) {
+                console.error("Connection Error:", err);
+            }
+        }
+
+        function updateUI(data) {
+            const display = document.getElementById('resultDisplay');
+            const statusTitle = document.getElementById('statusTitle');
+            const nameDiv = document.getElementById('studentName');
+            const regDiv = document.getElementById('regNumber');
+            const errorDiv = document.getElementById('errorMessage');
+            const iconDiv = document.getElementById('statusIcon');
+
+            display.classList.remove('hidden');
+            
+            if (data.status === 'Access Granted') {
+                display.className = "mt-8 p-6 rounded-lg border-2 border-green-600 bg-green-50 animate-reveal block";
+                statusTitle.className = "text-2xl font-black mb-2 text-green-700";
+                statusTitle.innerText = "ACCESS GRANTED";
+                iconDiv.innerText = "✅";
+                nameDiv.innerText = data.name;
+                regDiv.innerText = data.reg;
+                errorDiv.innerText = "";
+            } else {
+                display.className = "mt-8 p-6 rounded-lg border-2 border-red-600 bg-red-50 animate-reveal block";
+                statusTitle.className = "text-2xl font-black mb-2 text-red-700";
+                statusTitle.innerText = "ACCESS DENIED";
+                iconDiv.innerText = "❌";
+                nameDiv.innerText = "";
+                regDiv.innerText = "";
+                errorDiv.innerText = data.message;
+            }
+        }
+
+        async function updateLogs() {
+            try {
+                const res = await fetch('http://localhost:3000/logs');
+                const logs = await res.json();
+                const logContainer = document.getElementById('logTable');
+                
+                logContainer.innerHTML = logs.map(l => `
+                    <div class="log-entry flex items-center justify-between p-3 rounded bg-gray-50 border-l-4 ${l.status === 'Access Granted' ? 'border-green-600' : 'border-red-600'}">
+                        <div>
+                            <p class="font-bold text-xs uppercase text-gray-700">${l.student_name}</p>
+                            <p class="text-[10px] font-bold text-tuk-green">${new Date(l.access_time).toLocaleTimeString()}</p>
+                        </div>
+                        <span class="text-[10px] font-black px-2 py-1 rounded border ${l.status === 'Access Granted' ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600'} uppercase">
+                            ${l.status === 'Access Granted' ? 'Cleared' : 'Blocked'}
+                        </span>
+                    </div>
+                `).join('');
+                
+                // Re-apply search filter if user is currently searching
+                filterLogs(); 
+            } catch (err) {
+                console.warn("Log fetch failed.");
+            }
+        }
+        
+        updateLogs();
+    </script>
+</body>
+</html>
