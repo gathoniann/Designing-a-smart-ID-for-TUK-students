@@ -6,21 +6,32 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Database connection utilizing the smart_id_system database [cite: 351]
+/** * DATABASE CONNECTION
+ * Using Environment Variables (MYSQL_...) to satisfy security requirements.
+ * SSL is required for the Aiven cloud connection.
+ */
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '', 
-    database: 'smart_id_system', 
-    port: 3306
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE || 'defaultdb',
+    port: process.env.MYSQL_PORT || 23312,
+    ssl: {
+        rejectUnauthorized: false // Required for cloud-to-cloud connection
+    }
 });
 
 db.connect(err => {
-    if (err) return console.error('Database failed:', err);
-    console.log('Backend Ready & Logging Active.');
+    if (err) {
+        console.error('CRITICAL: Database connection failed:', err.message);
+        return;
+    }
+    console.log('SUCCESS: Connected to Aiven Cloud Database.');
 });
 
-// Verification route to handle real-time student identification [cite: 368]
+/** * VERIFICATION ROUTE
+ * Handles real-time student identification via NFC UID.
+ */
 app.post('/verify', (req, res) => {
     const { nfc_uid } = req.body;
     const findStudent = 'SELECT * FROM students WHERE nfc_uid = ?';
@@ -30,12 +41,13 @@ app.post('/verify', (req, res) => {
 
         if (results.length > 0) {
             const student = results[0];
-            // Check fee payment status as required by system logic [cite: 369]
             const status = (student.fee_status === 1) ? 'Access Granted' : 'Access Denied';
             
-            // Record activity in a log for future reference [cite: 363, 370]
+            // Log the activity to the database
             const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status) VALUES (?, ?, ?)';
-            db.query(logQuery, [student.student_name, student.reg_number, status]);
+            db.query(logQuery, [student.student_name, student.reg_number, status], (logErr) => {
+                if (logErr) console.error('Logging failed:', logErr.message);
+            });
 
             if (student.fee_status === 1) {
                 res.json({ status: 'Access Granted', name: student.student_name, reg: student.reg_number });
@@ -48,16 +60,19 @@ app.post('/verify', (req, res) => {
     });
 });
 
-// Step 2 Implementation: Optimized route to show recent logs
-// We fetch the 10 most recent entries to maintain performance as the population grows [cite: 375, 379]
+/** * SYSTEM LOGS
+ * Displays the 10 most recent campus access events.
+ */
 app.get('/logs', (req, res) => {
     db.query('SELECT * FROM access_logs ORDER BY access_time DESC LIMIT 10', (err, results) => {
-        if (err) return res.status(500).send(err);
+        if (err) return res.status(500).send(err.message);
         res.json(results);
     });
 });
 
-// New route for student portal: retrieve student profile and logs by registration number
+/** * STUDENT PORTAL
+ * Retrieves profile and specific access history by Registration Number.
+ */
 app.get('/student/:reg_number', (req, res) => {
     const reg_number = req.params.reg_number;
     const studentQuery = 'SELECT student_name, fee_status FROM students WHERE reg_number = ?';
@@ -70,7 +85,7 @@ app.get('/student/:reg_number', (req, res) => {
         }
         
         const student = studentResults[0];
-        const logsQuery = 'SELECT access_time, status FROM access_logs WHERE reg_number = ? ORDER BY access_time DESC';
+        const logsQuery = 'SELECT access_time, status FROM access_logs WHERE reg_number = ? ORDER BY access_time DESC LIMIT 15';
         
         db.query(logsQuery, [reg_number], (err, logsResults) => {
             if (err) return res.status(500).json({ error: 'Database error', message: err.message });
@@ -84,6 +99,8 @@ app.get('/student/:reg_number', (req, res) => {
     });
 });
 
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
+// Port binding for Render deployment
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+    console.log(`Backend Ready: Server running on port ${PORT}`);
 });
