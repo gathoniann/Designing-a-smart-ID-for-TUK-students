@@ -6,9 +6,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/** * DATABASE CONNECTION
+/**
+ * DATABASE CONNECTION
  * Using Environment Variables (MYSQL_...) to satisfy security requirements.
- * SSL is required for the Aiven cloud connection.
  */
 const db = mysql.createConnection({
     host: process.env.MYSQL_HOST,
@@ -17,7 +17,7 @@ const db = mysql.createConnection({
     database: process.env.MYSQL_DATABASE || 'defaultdb',
     port: process.env.MYSQL_PORT || 23312,
     ssl: {
-        rejectUnauthorized: false // Required for cloud-to-cloud connection
+        rejectUnauthorized: false // Required for secure cloud-to-cloud connection
     }
 });
 
@@ -29,8 +29,22 @@ db.connect(err => {
     console.log('SUCCESS: Connected to Aiven Cloud Database.');
 });
 
-/** * VERIFICATION ROUTE
- * Handles real-time student identification via NFC UID.
+/**
+ * HOME ROUTE
+ * Replaces "Cannot GET /" with a professional status message.
+ */
+app.get('/', (req, res) => {
+    res.json({
+        system: "TUK Smart ID System",
+        status: "Online",
+        university: "Technical University of Kenya",
+        version: "1.0.0"
+    });
+});
+
+/**
+ * VERIFICATION ROUTE
+ * Real-time student identification via NFC UID.
  */
 app.post('/verify', (req, res) => {
     const { nfc_uid } = req.body;
@@ -43,7 +57,7 @@ app.post('/verify', (req, res) => {
             const student = results[0];
             const status = (student.fee_status === 1) ? 'Access Granted' : 'Access Denied';
             
-            // Log the activity to the database
+            // Record activity in access_logs
             const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status) VALUES (?, ?, ?)';
             db.query(logQuery, [student.student_name, student.reg_number, status], (logErr) => {
                 if (logErr) console.error('Logging failed:', logErr.message);
@@ -60,7 +74,8 @@ app.post('/verify', (req, res) => {
     });
 });
 
-/** * SYSTEM LOGS
+/**
+ * SYSTEM LOGS
  * Displays the 10 most recent campus access events.
  */
 app.get('/logs', (req, res) => {
@@ -70,8 +85,9 @@ app.get('/logs', (req, res) => {
     });
 });
 
-/** * STUDENT PORTAL
- * Retrieves profile and specific access history by Registration Number.
+/**
+ * STUDENT PORTAL
+ * Retrieves profile and access history by Registration Number.
  */
 app.get('/student/:reg_number', (req, res) => {
     const reg_number = req.params.reg_number;
@@ -99,7 +115,7 @@ app.get('/student/:reg_number', (req, res) => {
     });
 });
 
-// Port binding for Render deployment
+// Use the port provided by Render (usually 10000) or default to 3000
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
     console.log(`Backend Ready: Server running on port ${PORT}`);
