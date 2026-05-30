@@ -1,4 +1,8 @@
 <script>
+        // ─── API Configuration ────────────────────────────────────────────────
+        // Change this one line to switch between local dev and deployed backend
+        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com'; // local: 'http://localhost:3000'
+        // ─────────────────────────────────────────────────────────────────────
         // Update the clock every second
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
@@ -22,8 +26,7 @@
             if (!regNumber) return;
 
             try {
-                // POINTING TO YOUR LIVE RENDER BACKEND
-                const res = await fetch(`https://designing-a-smart-id-for-tuk-students.onrender.com/student/${encodeURIComponent(regNumber)}`);
+                const res = await fetch(`${API_BASE}/student/${encodeURIComponent(regNumber)}`);
                 const data = await res.json();
 
                 if (res.ok) {

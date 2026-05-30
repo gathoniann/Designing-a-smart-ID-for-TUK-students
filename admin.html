@@ -106,6 +106,10 @@
     </main>
 
     <script>
+        // ─── API Configuration ────────────────────────────────────────────────
+        // Change this one line to switch between local dev and deployed backend
+        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com'; // local: 'http://localhost:3000'
+        // ─────────────────────────────────────────────────────────────────────
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
         }, 1000);
@@ -127,7 +131,7 @@
             if(!uid) return;
 
             try {
-                const res = await fetch('http://localhost:3000/verify', {
+                const res = await fetch(`${API_BASE}/verify`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({nfc_uid: uid})
@@ -174,7 +178,7 @@
 
         async function updateLogs() {
             try {
-                const res = await fetch('http://localhost:3000/logs');
+                const res = await fetch(`${API_BASE}/logs`);
                 const logs = await res.json();
                 const logContainer = document.getElementById('logTable');
                 
