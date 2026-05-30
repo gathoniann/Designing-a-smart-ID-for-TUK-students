@@ -8,6 +8,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Startup env var validation — catches missing Render environment variables immediately
+const REQUIRED_VARS = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
+const missing = REQUIRED_VARS.filter(v => !process.env[v]);
+if (missing.length > 0) {
+    console.error('CRITICAL: Missing required environment variables:', missing.join(', '));
+    console.error('Set these in Render Dashboard → Environment before deploying.');
+}
+
 /**
  * DATABASE CONNECTION
  * Using PostgreSQL (pg) with a connection Pool.
@@ -84,8 +92,9 @@ app.post('/verify', async (req, res) => {
             res.json({ status: 'Access Denied', message: 'Unknown Card' });
         }
     } catch (err) {
-        console.error('Verify error:', err.message);
-        res.status(500).json({ status: 'Error', message: err.message });
+        const msg = err.message || err.toString();
+        console.error('Verify error:', msg);
+        res.status(500).json({ status: 'Error', message: msg });
     }
 });
 
@@ -100,8 +109,9 @@ app.get('/logs', async (req, res) => {
         );
         res.json(rows);
     } catch (err) {
-        console.error('Logs error:', err.message);
-        res.status(500).json({ error: err.message });
+        const msg = err.message || err.toString();
+        console.error('Logs error:', msg);
+        res.status(500).json({ error: msg });
     }
 });
 
@@ -131,8 +141,9 @@ app.get('/student/:reg_number', async (req, res) => {
             logs:       logsResult.rows
         });
     } catch (err) {
-        console.error('Student lookup error:', err.message);
-        res.status(500).json({ error: 'Database error', message: err.message });
+        const msg = err.message || err.toString();
+        console.error('Student lookup error:', msg);
+        res.status(500).json({ error: 'Database error', message: msg });
     }
 });
 
