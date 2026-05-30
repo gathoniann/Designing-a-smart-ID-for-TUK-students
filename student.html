@@ -1,78 +1,273 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUK Smart ID | My ID Dashboard</title>
+    <meta name="description" content="TUK Smart ID Student Dashboard — view your fee clearance status and access history.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tuk-green { background-color: #006400; }
+        .text-tuk-green { color: #006400; }
+        .border-tuk-green { border-color: #006400; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-reveal { animation: slideUp 0.35s ease-out forwards; }
+
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.06); }
+        }
+        .pulse-badge { animation: pulse-badge 2s ease-in-out infinite; }
+
+        /* Card shimmer skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+
+    <!-- ── HEADER ─────────────────────────────────────────────────── -->
+    <header class="bg-white border-b-4 border-green-700 shadow-md">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-4">
+                <img src="https://www.tukenya.ac.ke/sites/default/files/logo_0.png"
+                     alt="TUK Logo" class="h-16 w-auto">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold text-green-700 uppercase tracking-tight leading-tight">
+                        Technical University of Kenya
+                    </h1>
+                    <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">My ID Dashboard</p>
+                    <a href="admin.html"
+                       class="text-xs font-semibold text-green-700 hover:text-green-900 underline transition-colors">
+                        ← Security Terminal
+                    </a>
+                </div>
+            </div>
+            <div class="text-center sm:text-right">
+                <div id="clock" class="text-2xl font-bold text-gray-700 tabular-nums">00:00:00</div>
+                <p id="current-date" class="text-[11px] font-bold text-green-700 uppercase tracking-widest mt-0.5"></p>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── MAIN ───────────────────────────────────────────────────── -->
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+
+        <!-- Search card -->
+        <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <div class="tuk-green px-6 py-4">
+                <h2 class="text-white font-bold uppercase tracking-wider text-sm flex items-center gap-2">
+                    🪪 Student ID Lookup
+                </h2>
+            </div>
+            <div class="p-6">
+                <label for="regInput" class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wider">
+                    Enter Your Registration Number
+                </label>
+                <div class="flex gap-3">
+                    <input type="text" id="regInput"
+                           placeholder="e.g. TUK/2021/001"
+                           class="flex-1 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-base font-mono focus:border-green-600 focus:ring-0 outline-none transition-colors uppercase">
+                    <button onclick="lookupStudent()" id="lookupBtn"
+                            class="tuk-green text-white px-6 py-3 rounded-lg font-bold text-sm uppercase hover:bg-green-800 active:scale-95 transition-all shadow-sm">
+                        Search
+                    </button>
+                </div>
+
+                <!-- Error -->
+                <div id="errorDisplay"
+                     class="hidden mt-4 p-4 rounded-lg bg-red-50 border border-red-300 text-red-700 text-sm font-semibold">
+                    ⚠️ Student not found. Please check your registration number.
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile card (hidden until loaded) -->
+        <section id="profileSection" class="hidden animate-reveal space-y-4">
+
+            <!-- ID Card -->
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div class="tuk-green px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-white font-bold uppercase tracking-wider text-sm">📋 Student Profile</h2>
+                    <span class="text-green-200 text-[10px] font-bold uppercase tracking-widest">NFC Smart ID</span>
+                </div>
+
+                <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <!-- Avatar -->
+                    <div class="w-20 h-20 rounded-full bg-green-100 border-4 border-green-600 flex items-center justify-center text-4xl flex-shrink-0">
+                        🎓
+                    </div>
+                    <!-- Details -->
+                    <div class="flex-1">
+                        <h3 id="studentName" class="text-2xl font-extrabold text-gray-800 uppercase"></h3>
+                        <p id="studentReg" class="text-sm font-semibold text-gray-500 mt-1"></p>
+                        <p class="text-xs text-gray-400 mt-0.5 uppercase tracking-widest">Technical University of Kenya</p>
+                    </div>
+                    <!-- Fee Status Badge -->
+                    <div class="flex-shrink-0 text-center">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Fee Status</p>
+                        <span id="feeStatus"
+                              class="pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase">
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Access History -->
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-green-700 font-bold uppercase text-sm tracking-wider">🕐 Access History</h2>
+                    <span id="tapCount" class="text-[10px] font-black text-gray-400 uppercase bg-gray-200 px-2 py-1 rounded-full"></span>
+                </div>
+                <div id="tapsList" class="p-4 space-y-2 max-h-72 overflow-y-auto">
+                    <p class="text-center text-gray-400 italic text-sm py-6">No access records found.</p>
+                </div>
+                <div class="px-4 py-2 bg-gray-50 border-t border-gray-200 text-[10px] text-gray-400 font-bold uppercase text-center tracking-widest">
+                    Showing last 15 tap records
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="text-center py-6 text-[11px] text-gray-400 font-medium uppercase tracking-widest">
+        TUK Smart ID System &copy; 2026 — Technical University of Kenya
+    </footer>
+
+    <script>
         // ─── API Configuration ────────────────────────────────────────────────
         // Change this one line to switch between local dev and deployed backend
         const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com'; // local: 'http://localhost:3000'
         // ─────────────────────────────────────────────────────────────────────
-        // Update the clock every second
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
 
-        // Auto-fill registration number if student logged in via index.html
+        // Live clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+            document.getElementById('current-date').innerText = now.toLocaleDateString('en-GB', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Auto-fill reg number if student logged in via index.html
         window.onload = () => {
             const savedReg = sessionStorage.getItem('regNumber');
             if (savedReg) {
                 document.getElementById('regInput').value = savedReg;
-                lookupStudent(); // Automatically load their profile
+                lookupStudent();
             }
         };
 
+        // Allow Enter key to trigger lookup
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('regInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') lookupStudent();
+            });
+        });
+
         async function lookupStudent() {
-            const regInput = document.getElementById('regInput');
-            const regNumber = regInput.value.trim();
+            const regInput     = document.getElementById('regInput');
+            const regNumber    = regInput.value.trim();
             const errorDisplay = document.getElementById('errorDisplay');
             const profileSection = document.getElementById('profileSection');
+            const btn          = document.getElementById('lookupBtn');
 
             if (!regNumber) return;
 
+            // Loading state
+            btn.innerText = 'Loading…';
+            btn.disabled  = true;
+            errorDisplay.classList.add('hidden');
+            profileSection.classList.add('hidden');
+
             try {
-                const res = await fetch(`${API_BASE}/student/${encodeURIComponent(regNumber)}`);
+                const res  = await fetch(`${API_BASE}/student/${encodeURIComponent(regNumber)}`);
                 const data = await res.json();
 
                 if (res.ok) {
                     displayProfile(data, regNumber);
                     errorDisplay.classList.add('hidden');
                 } else {
+                    errorDisplay.innerText = data.error === 'Student not found'
+                        ? '⚠️ Student not found. Please check your registration number.'
+                        : `⚠️ Error: ${data.error || 'Unknown error'}`;
                     errorDisplay.classList.remove('hidden');
                     profileSection.classList.add('hidden');
                 }
             } catch (err) {
-                console.error("Connection Error:", err);
-                errorDisplay.innerText = "Connection Error. Ensure backend is live.";
+                console.error('Connection Error:', err);
+                errorDisplay.innerText = '⚠️ Connection Error. Please ensure the backend is live.';
                 errorDisplay.classList.remove('hidden');
                 profileSection.classList.add('hidden');
+            } finally {
+                btn.innerText = 'Search';
+                btn.disabled  = false;
             }
         }
 
         function displayProfile(data, regNumber) {
-            document.getElementById('studentName').innerText = data.name;
-            document.getElementById('studentReg').innerText = 'Registration: ' + regNumber;
+            document.getElementById('studentName').innerText = data.name || 'Unknown';
+            document.getElementById('studentReg').innerText  = 'Registration No: ' + regNumber;
 
+            // fee_status is a PostgreSQL BOOLEAN → native JS true/false
             const feeStatus = document.getElementById('feeStatus');
-            if (data.fee_status === 1) {
-                feeStatus.innerText = 'Cleared';
-                feeStatus.className = 'px-4 py-2 rounded-full text-sm font-bold uppercase bg-green-100 text-green-800 border border-green-600';
+            if (data.fee_status === true) {
+                feeStatus.innerText   = '✅ Cleared';
+                feeStatus.className   = 'pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase bg-green-100 text-green-800 border-2 border-green-600';
             } else {
-                feeStatus.innerText = 'Pending';
-                feeStatus.className = 'px-4 py-2 rounded-full text-sm font-bold uppercase bg-red-100 text-red-800 border border-red-600';
+                feeStatus.innerText   = '⏳ Pending';
+                feeStatus.className   = 'pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase bg-red-100 text-red-800 border-2 border-red-600';
             }
 
+            // Access history
             const tapsList = document.getElementById('tapsList');
+            const tapCount = document.getElementById('tapCount');
+
             if (data.logs && data.logs.length > 0) {
+                tapCount.innerText = `${data.logs.length} record${data.logs.length !== 1 ? 's' : ''}`;
                 tapsList.innerHTML = data.logs.map(log => `
-                    <div class="flex items-center justify-between p-3 rounded bg-gray-50 border-l-4 ${log.status === 'Access Granted' ? 'border-green-600' : 'border-red-600'} animate-reveal">
+                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 border-l-4
+                                ${log.status === 'Access Granted' ? 'border-green-500' : 'border-red-500'} animate-reveal">
                         <div>
-                            <p class="text-[10px] font-bold text-tuk-green">${new Date(log.access_time).toLocaleString()}</p>
+                            <p class="text-xs font-semibold text-gray-700">
+                                ${log.status === 'Access Granted' ? '✅' : '❌'} ${log.status}
+                            </p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">
+                                ${new Date(log.access_time).toLocaleString('en-GB', {
+                                    day: '2-digit', month: 'short', year: 'numeric',
+                                    hour: '2-digit', minute: '2-digit'
+                                })}
+                            </p>
                         </div>
-                        <span class="text-[10px] font-black px-2 py-1 rounded border ${log.status === 'Access Granted' ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600'} uppercase">
+                        <span class="text-[10px] font-black px-2 py-1 rounded border
+                                     ${log.status === 'Access Granted'
+                                        ? 'border-green-500 text-green-700 bg-green-50'
+                                        : 'border-red-500 text-red-700 bg-red-50'} uppercase">
                             ${log.status === 'Access Granted' ? 'Granted' : 'Denied'}
                         </span>
                     </div>
                 `).join('');
             } else {
-                tapsList.innerHTML = '<p class="text-center text-gray-400 italic text-sm py-10">No taps found.</p>';
+                tapCount.innerText = '0 records';
+                tapsList.innerHTML = '<p class="text-center text-gray-400 italic text-sm py-6">No access records yet.</p>';
             }
 
             document.getElementById('profileSection').classList.remove('hidden');
         }
     </script>
+</body>
+</html>
