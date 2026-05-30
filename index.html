@@ -1,34 +1,313 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUK Smart ID | Login</title>
+    <meta name="description" content="TUK Smart ID System — Secure login for students and administrators at the Technical University of Kenya.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+
+        .tuk-green { background-color: #006400; }
+        .tuk-green-dark { background-color: #004d00; }
+
+        /* Animated gradient background */
+        .bg-animated {
+            background: linear-gradient(135deg, #003300 0%, #006400 40%, #004d00 70%, #001a00 100%);
+            background-size: 300% 300%;
+            animation: gradientShift 8s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism card */
+        .glass {
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            animation: float linear infinite;
+        }
+        @keyframes float {
+            0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10%  { opacity: 1; }
+            90%  { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+
+        .tab-active {
+            background-color: #006400;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,100,0,0.3);
+        }
+        .tab-inactive {
+            background-color: transparent;
+            color: #6b7280;
+        }
+        .tab-inactive:hover { background-color: #f3f4f6; color: #374151; }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #fafafa;
+        }
+        .input-field:focus { border-color: #006400; background: #fff; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 0.85rem;
+            background-color: #006400;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(0,100,0,0.35);
+        }
+        .btn-primary:hover:not(:disabled)  { background-color: #004d00; box-shadow: 0 6px 20px rgba(0,100,0,0.45); }
+        .btn-primary:active:not(:disabled) { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
+
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            20%,60% { transform: translateX(-6px); }
+            40%,80% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.4s ease; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .slide-down { animation: slideDown 0.3s ease forwards; }
+    </style>
+</head>
+<body class="bg-animated min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+
+    <!-- Floating background particles -->
+    <div class="particle" style="width:60px;height:60px;left:10%;animation-duration:18s;animation-delay:0s;"></div>
+    <div class="particle" style="width:40px;height:40px;left:25%;animation-duration:22s;animation-delay:3s;"></div>
+    <div class="particle" style="width:80px;height:80px;left:60%;animation-duration:15s;animation-delay:1s;"></div>
+    <div class="particle" style="width:30px;height:30px;left:75%;animation-duration:25s;animation-delay:5s;"></div>
+    <div class="particle" style="width:50px;height:50px;left:85%;animation-duration:20s;animation-delay:2s;"></div>
+    <div class="particle" style="width:25px;height:25px;left:45%;animation-duration:17s;animation-delay:7s;"></div>
+
+    <!-- Login card -->
+    <div class="glass rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
+
+        <!-- Card header -->
+        <div class="tuk-green px-8 py-7 text-center">
+            <img src="https://www.tukenya.ac.ke/sites/default/files/logo_0.png"
+                 alt="TUK Logo" class="h-16 w-auto mx-auto mb-3 drop-shadow-lg">
+            <h1 class="text-white text-xl font-extrabold uppercase tracking-tight leading-tight">
+                Technical University of Kenya
+            </h1>
+            <p class="text-green-200 text-[11px] font-semibold uppercase tracking-[0.2em] mt-1">
+                NFC Smart ID System
+            </p>
+        </div>
+
+        <!-- Tab switcher -->
+        <div class="flex gap-1 p-3 bg-gray-50 border-b border-gray-200">
+            <button id="tab-student" onclick="switchTab('student')"
+                    class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active">
+                🎓 Student Login
+            </button>
+            <button id="tab-admin" onclick="switchTab('admin')"
+                    class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive">
+                🔐 Admin Login
+            </button>
+        </div>
+
+        <!-- Form body -->
+        <div class="px-8 py-7 space-y-5">
+
+            <!-- Student login fields -->
+            <div id="student-fields" class="space-y-4 slide-down">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Registration Number
+                    </label>
+                    <input type="text" id="studentReg" class="input-field font-mono uppercase"
+                           placeholder="e.g. TUK/2021/001"
+                           onkeydown="if(event.key==='Enter') handleLogin()">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="studentPassword" class="input-field pr-10"
+                               placeholder="Enter your password"
+                               onkeydown="if(event.key==='Enter') handleLogin()">
+                        <button type="button" onclick="togglePwd('studentPassword', this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold">
+                            SHOW
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin login fields -->
+            <div id="admin-fields" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Admin Username
+                    </label>
+                    <input type="text" id="adminUser" class="input-field"
+                           placeholder="Enter admin username"
+                           onkeydown="if(event.key==='Enter') handleLogin()">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="adminPassword" class="input-field pr-10"
+                               placeholder="Enter admin password"
+                               onkeydown="if(event.key==='Enter') handleLogin()">
+                        <button type="button" onclick="togglePwd('adminPassword', this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold">
+                            SHOW
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error message -->
+            <div id="errorMessage" class="hidden slide-down bg-red-50 border border-red-300 rounded-lg px-4 py-3 text-red-700 text-sm font-semibold">
+            </div>
+
+            <!-- Submit button -->
+            <button id="loginBtn" onclick="handleLogin()" class="btn-primary">
+                Sign In
+            </button>
+
+            <!-- Info hint -->
+            <p id="hint-student" class="text-center text-[11px] text-gray-400">
+                Use your registration number as your username
+            </p>
+            <p id="hint-admin" class="hidden text-center text-[11px] text-gray-400">
+                Administrator access only
+            </p>
+        </div>
+
+        <div class="px-8 pb-5 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest">
+            TUK Smart ID &copy; 2026 — Secure Access System
+        </div>
+    </div>
+
+    <script>
+        // ─── API Configuration ────────────────────────────────────────────────
+        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com';
+        // ─────────────────────────────────────────────────────────────────────
+
+        let currentTab = 'student';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const isStudent = tab === 'student';
+
+            document.getElementById('tab-student').className  = `flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isStudent ? 'tab-active' : 'tab-inactive'}`;
+            document.getElementById('tab-admin').className    = `flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isStudent ? 'tab-inactive' : 'tab-active'}`;
+            document.getElementById('student-fields').classList.toggle('hidden', !isStudent);
+            document.getElementById('admin-fields').classList.toggle('hidden', isStudent);
+            document.getElementById('hint-student').classList.toggle('hidden', !isStudent);
+            document.getElementById('hint-admin').classList.toggle('hidden', isStudent);
+            document.getElementById('errorMessage').classList.add('hidden');
+
+            // Focus first field of newly selected tab
+            setTimeout(() => {
+                const focusId = isStudent ? 'studentReg' : 'adminUser';
+                document.getElementById(focusId).focus();
+            }, 50);
+        }
+
+        function togglePwd(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.innerText = isHidden ? 'HIDE' : 'SHOW';
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMessage');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+            el.classList.remove('shake');
+            void el.offsetWidth; // reflow to restart animation
+            el.classList.add('shake');
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = loading;
+            btn.innerText = loading ? 'Signing in…' : 'Sign In';
+        }
+
         async function handleLogin() {
-            const role = document.getElementById('role').value;
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const errorElement = document.getElementById('errorMessage');
+            document.getElementById('errorMessage').classList.add('hidden');
 
-            // Hide error message initially
-            errorElement.classList.add('hidden');
+            if (currentTab === 'admin') {
+                // ── Admin: client-side prototype auth ──────────────────────
+                const username = document.getElementById('adminUser').value.trim();
+                const password = document.getElementById('adminPassword').value.trim();
 
-            if (!username || !password) {
-                errorElement.innerText = "Please fill in all fields.";
-                errorElement.classList.remove('hidden');
-                return;
-            }
+                if (!username || !password) return showError('Please fill in all fields.');
+                if (password !== 'admin123') return showError('Invalid credentials. Access Denied.');
 
-            // PROTOTYPE LOGIC FOR DEFENSE:
-            // In a production environment, you would use: 
-            // await fetch('https://designing-a-smart-id-for-tuk-students.onrender.com/login', ...)
-            
-            if (role === 'admin' && password === 'admin123') {
-                // Store username for the session so the admin page knows who is logged in
                 sessionStorage.setItem('adminUser', username);
-                window.location.href = 'admin.html'; 
-            } else if (role === 'student' && password === 'student123') {
-                // Store the Reg No so the student portal knows which data to fetch from Render
-                sessionStorage.setItem('regNumber', username);
-                window.location.href = 'student.html'; 
+                window.location.href = 'admin.html';
+
             } else {
-                errorElement.innerText = "Invalid credentials. Access Denied.";
-                errorElement.classList.remove('hidden');
+                // ── Student: authenticate against live backend ──────────────
+                const regNumber = document.getElementById('studentReg').value.trim().toUpperCase();
+                const password  = document.getElementById('studentPassword').value.trim();
+
+                if (!regNumber || !password) return showError('Please fill in all fields.');
+
+                setLoading(true);
+                try {
+                    const res  = await fetch(`${API_BASE}/login`, {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify({ reg_number: regNumber, password })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        sessionStorage.setItem('regNumber', regNumber);
+                        window.location.href = 'student.html';
+                    } else {
+                        showError(data.message || 'Invalid credentials. Access Denied.');
+                    }
+                } catch (err) {
+                    showError('Connection error. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
             }
         }
     </script>
+</body>
+</html>

@@ -48,10 +48,17 @@
                         Technical University of Kenya
                     </h1>
                     <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">My ID Dashboard</p>
-                    <a href="admin.html"
-                       class="text-xs font-semibold text-green-700 hover:text-green-900 underline transition-colors">
-                        ← Security Terminal
-                    </a>
+                    <div class="flex items-center gap-3 mt-0.5">
+                        <a href="admin.html"
+                           class="text-xs font-semibold text-green-700 hover:text-green-900 underline transition-colors">
+                            ← Security Terminal
+                        </a>
+                        <span class="text-gray-300">|</span>
+                        <button onclick="logout()"
+                                class="text-xs font-semibold text-red-500 hover:text-red-700 underline transition-colors">
+                            Sign Out
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="text-center sm:text-right">
@@ -163,14 +170,24 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // Auto-fill reg number if student logged in via index.html
+        // ── Auth guard: redirect to login if no session ───────────────────
         window.onload = () => {
             const savedReg = sessionStorage.getItem('regNumber');
-            if (savedReg) {
-                document.getElementById('regInput').value = savedReg;
-                lookupStudent();
+            if (!savedReg) {
+                // Not logged in — redirect to login page
+                window.location.href = 'index.html';
+                return;
             }
+            // Auto-load this student's profile
+            document.getElementById('regInput').value = savedReg;
+            lookupStudent();
         };
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
 
         // Allow Enter key to trigger lookup
         document.addEventListener('DOMContentLoaded', () => {

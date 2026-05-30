@@ -57,6 +57,42 @@ app.get('/', (req, res) => {
 });
 
 /**
+ * STUDENT LOGIN ROUTE
+ * Authenticates a student by reg_number + password.
+ * The password is stored as plain text in the students table for this prototype.
+ * In production, use bcrypt hashing.
+ */
+app.post('/login', async (req, res) => {
+    const { reg_number, password } = req.body;
+
+    if (!reg_number || !password) {
+        return res.status(400).json({ success: false, message: 'Registration number and password are required.' });
+    }
+
+    try {
+        const query = 'SELECT student_name, reg_number, fee_status FROM students WHERE reg_number = $1 AND password = $2';
+        const result = await pool.query(query, [reg_number, password]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ success: false, message: 'Invalid registration number or password.' });
+        }
+
+        const student = result.rows[0];
+        res.json({
+            success: true,
+            message: 'Login successful',
+            name: student.student_name,
+            reg_number: student.reg_number
+        });
+    } catch (err) {
+        const msg = err.message || err.toString();
+        console.error('Login error:', msg);
+        res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+    }
+});
+
+
+/**
  * VERIFICATION ROUTE
  * Real-time student identification via NFC UID.
  */
