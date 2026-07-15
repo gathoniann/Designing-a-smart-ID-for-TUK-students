@@ -6,216 +6,219 @@
     <title>TUK Smart ID | Login</title>
     <meta name="description" content="TUK Smart ID System — Secure login for students and administrators at the Technical University of Kenya.">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tuk: {
+                            blue: '#1E3A8A', // Deep Blue
+                            green: '#006400', // Deep Green
+                            light: '#F3F4F6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-
-        .tuk-green { background-color: #006400; }
-        .tuk-green-dark { background-color: #004d00; }
-
-        /* Animated gradient background */
-        .bg-animated {
-            background: linear-gradient(135deg, #003300 0%, #006400 40%, #004d00 70%, #001a00 100%);
-            background-size: 300% 300%;
-            animation: gradientShift 8s ease infinite;
-        }
-        @keyframes gradientShift {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Glassmorphism card */
-        .glass {
-            background: rgba(255, 255, 255, 0.97);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        /* Floating particles */
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.06);
-            animation: float linear infinite;
-        }
-        @keyframes float {
-            0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-            10%  { opacity: 1; }
-            90%  { opacity: 1; }
-            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        
+        /* Subtle Tech Background */
+        .bg-tech-pattern {
+            background-color: #F3F4F6;
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 20px 20px;
         }
 
         .tab-active {
-            background-color: #006400;
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(0,100,0,0.3);
+            color: #1E3A8A;
+            border-bottom: 2px solid #006400;
         }
         .tab-inactive {
-            background-color: transparent;
-            color: #6b7280;
+            color: #9CA3AF;
+            border-bottom: 2px solid transparent;
         }
-        .tab-inactive:hover { background-color: #f3f4f6; color: #374151; }
 
         .input-field {
             width: 100%;
             padding: 0.75rem 1rem;
-            border: 2px solid #e5e7eb;
+            border: 1px solid #E5E7EB;
             border-radius: 0.5rem;
+            background-color: #F3F4F6;
             font-size: 0.95rem;
             outline: none;
-            transition: border-color 0.2s;
-            background: #fafafa;
+            transition: border-color 0.2s, background-color 0.2s;
         }
-        .input-field:focus { border-color: #006400; background: #fff; }
+        .input-field:focus { 
+            border-color: #006400; 
+            background-color: #FFFFFF; 
+        }
 
         .btn-primary {
             width: 100%;
             padding: 0.85rem;
             background-color: #006400;
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.95rem;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 1rem;
             border: none;
             border-radius: 0.5rem;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
-            box-shadow: 0 4px 14px rgba(0,100,0,0.35);
+            transition: background-color 0.2s;
         }
-        .btn-primary:hover:not(:disabled)  { background-color: #004d00; box-shadow: 0 6px 20px rgba(0,100,0,0.45); }
-        .btn-primary:active:not(:disabled) { transform: scale(0.98); }
-        .btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
+        .btn-primary:hover:not(:disabled) { background-color: #004d00; }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
         @keyframes shake {
-            0%,100% { transform: translateX(0); }
-            20%,60% { transform: translateX(-6px); }
-            40%,80% { transform: translateX(6px); }
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
         }
         .shake { animation: shake 0.4s ease; }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .slide-down { animation: slideDown 0.3s ease forwards; }
     </style>
 </head>
-<body class="bg-animated min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+<body class="bg-tech-pattern min-h-screen flex flex-col overflow-x-hidden">
 
-    <!-- Floating background particles -->
-    <div class="particle" style="width:60px;height:60px;left:10%;animation-duration:18s;animation-delay:0s;"></div>
-    <div class="particle" style="width:40px;height:40px;left:25%;animation-duration:22s;animation-delay:3s;"></div>
-    <div class="particle" style="width:80px;height:80px;left:60%;animation-duration:15s;animation-delay:1s;"></div>
-    <div class="particle" style="width:30px;height:30px;left:75%;animation-duration:25s;animation-delay:5s;"></div>
-    <div class="particle" style="width:50px;height:50px;left:85%;animation-duration:20s;animation-delay:2s;"></div>
-    <div class="particle" style="width:25px;height:25px;left:45%;animation-duration:17s;animation-delay:7s;"></div>
-
-    <!-- Login card -->
-    <div class="glass rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
-
-        <!-- Card header -->
-        <div class="tuk-green px-8 py-7 text-center">
-            <img src="https://www.tukenya.ac.ke/sites/default/files/logo_0.png"
-                 alt="TUK Logo" class="h-16 w-auto mx-auto mb-3 drop-shadow-lg">
-            <h1 class="text-white text-xl font-extrabold uppercase tracking-tight leading-tight">
-                Technical University of Kenya
-            </h1>
-            <p class="text-green-200 text-[11px] font-semibold uppercase tracking-[0.2em] mt-1">
-                NFC Smart ID System
-            </p>
+    <!-- 1. Header -->
+    <header class="bg-white shadow-sm py-4 px-6 md:px-12 flex items-center justify-between z-20 relative">
+        <div class="flex items-center gap-4">
+            <img src="https://www.tukenya.ac.ke/sites/default/files/logo_0.png" alt="TUK Logo" class="h-12 w-auto">
+            <div class="hidden md:block border-l-2 border-gray-200 pl-4">
+                <p class="text-tuk-blue font-bold text-sm tracking-wide uppercase">Education and Training</p>
+                <p class="text-tuk-blue font-bold text-sm tracking-wide uppercase">for the Real World</p>
+            </div>
         </div>
+        <button class="bg-tuk-green hover:bg-green-800 text-white font-medium py-2 px-6 rounded-md transition-colors text-sm">
+            Help & Support
+        </button>
+    </header>
 
-        <!-- Tab switcher -->
-        <div class="flex gap-1 p-3 bg-gray-50 border-b border-gray-200">
-            <button id="tab-student" onclick="switchTab('student')"
-                    class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-active">
-                🎓 Student Login
-            </button>
-            <button id="tab-admin" onclick="switchTab('admin')"
-                    class="flex-1 py-2 rounded-lg text-sm font-bold transition-all tab-inactive">
-                🔐 Admin Login
-            </button>
-        </div>
-
-        <!-- Form body -->
-        <div class="px-8 py-7 space-y-5">
-
-            <!-- Student login fields -->
-            <div id="student-fields" class="space-y-4 slide-down">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Registration Number
-                    </label>
-                    <input type="text" id="studentReg" class="input-field font-mono uppercase"
-                           placeholder="e.g. TUK/2021/001"
-                           onkeydown="if(event.key==='Enter') handleLogin()">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Password
-                    </label>
-                    <div class="relative">
-                        <input type="password" id="studentPassword" class="input-field pr-10"
-                               placeholder="Enter your password"
-                               onkeydown="if(event.key==='Enter') handleLogin()">
-                        <button type="button" onclick="togglePwd('studentPassword', this)"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold">
-                            SHOW
-                        </button>
+    <!-- Main Content Area (Split Screen) -->
+    <main class="flex-grow flex flex-col lg:flex-row items-center justify-center p-6 md:p-12 gap-12 max-w-7xl mx-auto w-full relative z-10">
+        
+        <!-- Left Column: Text & Login Card -->
+        <div class="w-full lg:w-1/2 flex flex-col gap-10">
+            
+            <!-- Hero Text -->
+            <div class="space-y-4">
+                <h2 class="text-lg text-tuk-green font-bold tracking-wider uppercase">Welcome to the TUK Smart ID Portal</h2>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-tuk-blue leading-tight">
+                    Seamless Campus Access.
+                </h1>
+                <p class="text-gray-600 text-lg leading-relaxed max-w-lg">
+                    A secure, integrated NFC-based identification system providing real-time access to university facilities, library services, and fee status verification.
+                </p>
+                
+                <!-- Feature Badges -->
+                <div class="flex flex-wrap gap-4 pt-2">
+                    <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                        <svg class="w-5 h-5 text-tuk-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="text-sm font-semibold text-gray-700">Instant Verification</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                        <svg class="w-5 h-5 text-tuk-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <span class="text-sm font-semibold text-gray-700">Secure Access</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                        <svg class="w-5 h-5 text-tuk-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        <span class="text-sm font-semibold text-gray-700">Portal Integrated</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Admin login fields -->
-            <div id="admin-fields" class="space-y-4 hidden">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Admin Username
-                    </label>
-                    <input type="text" id="adminUser" class="input-field"
-                           placeholder="Enter admin username"
-                           onkeydown="if(event.key==='Enter') handleLogin()">
+            <!-- 3. Login Section -->
+            <div class="bg-white p-8 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-200 max-w-md w-full relative z-20">
+                <!-- Tabs -->
+                <div class="flex mb-6 border-b border-gray-200">
+                    <button id="tab-student" onclick="switchTab('student')" class="flex-1 pb-3 text-center font-bold text-sm tab-active transition-all">
+                        Student Login
+                    </button>
+                    <button id="tab-admin" onclick="switchTab('admin')" class="flex-1 pb-3 text-center font-bold text-sm tab-inactive transition-all">
+                        Staff / Admin Login
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Password
-                    </label>
-                    <div class="relative">
-                        <input type="password" id="adminPassword" class="input-field pr-10"
-                               placeholder="Enter admin password"
-                               onkeydown="if(event.key==='Enter') handleLogin()">
-                        <button type="button" onclick="togglePwd('adminPassword', this)"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold">
-                            SHOW
-                        </button>
+
+                <!-- Forms Container -->
+                <div class="space-y-5">
+                    
+                    <!-- Student Login -->
+                    <div id="student-fields" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Registration Number</label>
+                            <input type="text" id="studentReg" class="input-field uppercase font-mono" placeholder="e.g. AIIM/00000/2021" onkeydown="if(event.key==='Enter') handleLogin()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="studentPassword" class="input-field pr-10" placeholder="Enter your password" onkeydown="if(event.key==='Enter') handleLogin()">
+                                <button type="button" onclick="togglePwd('studentPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-tuk-blue">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Login -->
+                    <div id="admin-fields" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Admin Username</label>
+                            <input type="text" id="adminUser" class="input-field" placeholder="Enter admin username" onkeydown="if(event.key==='Enter') handleLogin()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="adminPassword" class="input-field pr-10" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') handleLogin()">
+                                <button type="button" onclick="togglePwd('adminPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-tuk-blue">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Msg -->
+                    <div id="errorMessage" class="hidden bg-red-50 border-l-4 border-red-500 p-3 text-red-700 text-sm font-medium"></div>
+
+                    <button id="loginBtn" onclick="handleLogin()" class="btn-primary mt-2">
+                        Secure Login
+                    </button>
+
+                    <!-- Links -->
+                    <div class="flex flex-col items-center gap-2 mt-6">
+                        <a href="#" class="text-sm font-semibold text-tuk-blue hover:underline">Forgot Password?</a>
+                        <a href="#" class="text-sm font-semibold text-tuk-blue hover:underline">Activate New NFC Card</a>
                     </div>
                 </div>
             </div>
 
-            <!-- Error message -->
-            <div id="errorMessage" class="hidden slide-down bg-red-50 border border-red-300 rounded-lg px-4 py-3 text-red-700 text-sm font-semibold">
+        </div>
+
+        <!-- Right Column: Visual -->
+        <div class="w-full lg:w-1/2 flex justify-center items-center">
+            <div class="relative w-full max-w-lg aspect-square drop-shadow-2xl">
+                <img src="nfc_reader.png" alt="NFC Reader Illustration" class="w-full h-full object-contain rounded-2xl">
             </div>
-
-            <!-- Submit button -->
-            <button id="loginBtn" onclick="handleLogin()" class="btn-primary">
-                Sign In
-            </button>
-
-            <!-- Info hint -->
-            <p id="hint-student" class="text-center text-[11px] text-gray-400">
-                Use your registration number as your username
-            </p>
-            <p id="hint-admin" class="hidden text-center text-[11px] text-gray-400">
-                Administrator access only
-            </p>
         </div>
 
-        <div class="px-8 pb-5 text-center text-[10px] text-gray-400 font-medium uppercase tracking-widest">
-            TUK Smart ID &copy; 2026 — Secure Access System
+    </main>
+
+    <!-- 4. Footer -->
+    <footer class="bg-tuk-blue py-6 px-6 md:px-12 text-white relative z-20 mt-auto">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-sm font-medium text-gray-300">
+                &copy; 2026 Technical University of Kenya. All Rights Reserved.
+            </p>
+            <div class="flex items-center gap-6 text-sm font-semibold text-white">
+                <a href="#" class="hover:text-gray-300 transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">Terms of Use</a>
+                <a href="#" class="hover:text-gray-300 transition-colors">ICT Helpdesk</a>
+            </div>
         </div>
-    </div>
+    </footer>
 
     <script>
         // ─── API Configuration ────────────────────────────────────────────────
@@ -228,26 +231,22 @@
             currentTab = tab;
             const isStudent = tab === 'student';
 
-            document.getElementById('tab-student').className  = `flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isStudent ? 'tab-active' : 'tab-inactive'}`;
-            document.getElementById('tab-admin').className    = `flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isStudent ? 'tab-inactive' : 'tab-active'}`;
+            document.getElementById('tab-student').className = `flex-1 pb-3 text-center font-bold text-sm transition-all ${isStudent ? 'tab-active' : 'tab-inactive'}`;
+            document.getElementById('tab-admin').className   = `flex-1 pb-3 text-center font-bold text-sm transition-all ${isStudent ? 'tab-inactive' : 'tab-active'}`;
+            
             document.getElementById('student-fields').classList.toggle('hidden', !isStudent);
             document.getElementById('admin-fields').classList.toggle('hidden', isStudent);
-            document.getElementById('hint-student').classList.toggle('hidden', !isStudent);
-            document.getElementById('hint-admin').classList.toggle('hidden', isStudent);
             document.getElementById('errorMessage').classList.add('hidden');
 
-            // Focus first field of newly selected tab
             setTimeout(() => {
                 const focusId = isStudent ? 'studentReg' : 'adminUser';
                 document.getElementById(focusId).focus();
             }, 50);
         }
 
-        function togglePwd(inputId, btn) {
+        function togglePwd(inputId) {
             const input = document.getElementById(inputId);
-            const isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
-            btn.innerText = isHidden ? 'HIDE' : 'SHOW';
+            input.type = input.type === 'password' ? 'text' : 'password';
         }
 
         function showError(msg) {
@@ -255,21 +254,20 @@
             el.innerText = msg;
             el.classList.remove('hidden');
             el.classList.remove('shake');
-            void el.offsetWidth; // reflow to restart animation
+            void el.offsetWidth;
             el.classList.add('shake');
         }
 
         function setLoading(loading) {
             const btn = document.getElementById('loginBtn');
             btn.disabled = loading;
-            btn.innerText = loading ? 'Signing in…' : 'Sign In';
+            btn.innerText = loading ? 'Authenticating...' : 'Secure Login';
         }
 
         async function handleLogin() {
             document.getElementById('errorMessage').classList.add('hidden');
 
             if (currentTab === 'admin') {
-                // ── Admin: client-side prototype auth ──────────────────────
                 const username = document.getElementById('adminUser').value.trim();
                 const password = document.getElementById('adminPassword').value.trim();
 
@@ -278,9 +276,7 @@
 
                 sessionStorage.setItem('adminUser', username);
                 window.location.href = 'admin.html';
-
             } else {
-                // ── Student: authenticate against live backend ──────────────
                 const regNumber = document.getElementById('studentReg').value.trim().toUpperCase();
                 const password  = document.getElementById('studentPassword').value.trim();
 
