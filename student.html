@@ -24,15 +24,12 @@
             50%       { transform: scale(1.06); }
         }
         .pulse-badge { animation: pulse-badge 2s ease-in-out infinite; }
-
-        /* Card shimmer skeleton */
-        .skeleton {
-            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.4s infinite;
-            border-radius: 6px;
-        }
-        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        /* Table styles */
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: #6b7280; letter-spacing: 0.05em; }
+        tbody tr:hover { background-color: #f9fafb; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800">
@@ -49,11 +46,6 @@
                     </h1>
                     <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">My ID Dashboard</p>
                     <div class="flex items-center gap-3 mt-0.5">
-                        <a href="admin.html"
-                           class="text-xs font-semibold text-green-700 hover:text-green-900 underline transition-colors">
-                            ← Security Terminal
-                        </a>
-                        <span class="text-gray-300">|</span>
                         <button onclick="logout()"
                                 class="text-xs font-semibold text-red-500 hover:text-red-700 underline transition-colors">
                             Sign Out
@@ -71,76 +63,77 @@
     <!-- ── MAIN ───────────────────────────────────────────────────── -->
     <main class="max-w-4xl mx-auto px-4 py-8 space-y-6">
 
-        <!-- Search card -->
-        <section class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div class="tuk-green px-6 py-4">
-                <h2 class="text-white font-bold uppercase tracking-wider text-sm flex items-center gap-2">
-                    🪪 Student ID Lookup
-                </h2>
-            </div>
-            <div class="p-6">
-                <label for="regInput" class="block text-xs font-bold text-gray-500 uppercase mb-2 tracking-wider">
-                    Enter Your Registration Number
-                </label>
-                <div class="flex gap-3">
-                    <input type="text" id="regInput"
-                           placeholder="e.g. AIIM/00476/2022"
-                           class="flex-1 bg-gray-50 border-2 border-gray-300 rounded-lg px-4 py-3 text-base font-mono focus:border-green-600 focus:ring-0 outline-none transition-colors uppercase">
-                    <button onclick="lookupStudent()" id="lookupBtn"
-                            class="tuk-green text-white px-6 py-3 rounded-lg font-bold text-sm uppercase hover:bg-green-800 active:scale-95 transition-all shadow-sm">
-                        Search
-                    </button>
-                </div>
+        <!-- Error Msg Container (if student fetch fails) -->
+        <div id="errorDisplay" class="hidden p-4 rounded-lg bg-red-50 border border-red-300 text-red-700 text-sm font-semibold">
+        </div>
 
-                <!-- Error -->
-                <div id="errorDisplay"
-                     class="hidden mt-4 p-4 rounded-lg bg-red-50 border border-red-300 text-red-700 text-sm font-semibold">
-                    ⚠️ Student not found. Please check your registration number.
-                </div>
-            </div>
-        </section>
+        <!-- Loading state -->
+        <div id="loadingState" class="text-center py-12">
+            <p class="text-gray-500 font-semibold animate-pulse">Loading profile...</p>
+        </div>
 
-        <!-- Profile card (hidden until loaded) -->
-        <section id="profileSection" class="hidden animate-reveal space-y-4">
+        <!-- Profile card -->
+        <section id="profileSection" class="hidden animate-reveal space-y-6">
 
             <!-- ID Card -->
             <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                <div class="tuk-green px-6 py-4 flex justify-between items-center">
-                    <h2 class="text-white font-bold uppercase tracking-wider text-sm">📋 Student Profile</h2>
-                    <span class="text-green-200 text-[10px] font-bold uppercase tracking-widest">NFC Smart ID</span>
+                <div class="bg-gray-100 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-gray-800 font-bold uppercase tracking-wider text-sm">📋 Student Profile</h2>
+                    <span class="text-green-700 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        NFC Smart ID
+                    </span>
                 </div>
 
                 <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center gap-6">
                     <!-- Avatar -->
-                    <div class="w-20 h-20 rounded-full bg-green-100 border-4 border-green-600 flex items-center justify-center text-4xl flex-shrink-0">
+                    <div class="w-24 h-24 rounded-full bg-green-50 border-4 border-green-600 flex items-center justify-center text-4xl flex-shrink-0 shadow-sm">
                         🎓
                     </div>
                     <!-- Details -->
-                    <div class="flex-1">
+                    <div class="flex-1 space-y-1">
                         <h3 id="studentName" class="text-2xl font-extrabold text-gray-800 uppercase"></h3>
-                        <p id="studentReg" class="text-sm font-semibold text-gray-500 mt-1"></p>
-                        <p class="text-xs text-gray-400 mt-0.5 uppercase tracking-widest">Technical University of Kenya</p>
+                        <p id="studentReg" class="text-sm font-bold text-gray-600"></p>
+                        <p id="studentProgram" class="text-xs font-semibold text-gray-500"></p>
+                        <div class="pt-2">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-gray-100 text-[10px] font-mono text-gray-600 border border-gray-200">
+                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                UID: <span id="nfcUid"></span>
+                            </span>
+                        </div>
                     </div>
                     <!-- Fee Status Badge -->
-                    <div class="flex-shrink-0 text-center">
+                    <div class="flex-shrink-0 text-center sm:text-right mt-4 sm:mt-0 w-full sm:w-auto">
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Fee Status</p>
                         <span id="feeStatus"
-                              class="pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase">
+                              class="pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase shadow-sm">
                         </span>
                     </div>
                 </div>
             </div>
 
-            <!-- Access History -->
+            <!-- Access History Table -->
             <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                <div class="bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                    <h2 class="text-green-700 font-bold uppercase text-sm tracking-wider">🕐 Access History</h2>
-                    <span id="tapCount" class="text-[10px] font-black text-gray-400 uppercase bg-gray-200 px-2 py-1 rounded-full"></span>
+                <div class="bg-gray-100 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                    <h2 class="text-gray-800 font-bold uppercase text-sm tracking-wider">🕐 Access History</h2>
+                    <span id="tapCount" class="text-[10px] font-black text-gray-500 uppercase bg-white border border-gray-200 px-2 py-1 rounded-full shadow-sm"></span>
                 </div>
-                <div id="tapsList" class="p-4 space-y-2 max-h-72 overflow-y-auto">
-                    <p class="text-center text-gray-400 italic text-sm py-6">No access records found.</p>
+                
+                <div class="overflow-x-auto max-h-80">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="sticky top-0 shadow-sm z-10">
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Facility</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tapsList">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
                 </div>
-                <div class="px-4 py-2 bg-gray-50 border-t border-gray-200 text-[10px] text-gray-400 font-bold uppercase text-center tracking-widest">
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 text-[10px] text-gray-400 font-bold uppercase text-center tracking-widest">
                     Showing last 15 tap records
                 </div>
             </div>
@@ -155,7 +148,6 @@
 
     <script>
         // ─── API Configuration ────────────────────────────────────────────────
-        // Change this one line to switch between local dev and deployed backend
         const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com'; // local: 'http://localhost:3000'
         // ─────────────────────────────────────────────────────────────────────
 
@@ -179,8 +171,7 @@
                 return;
             }
             // Auto-load this student's profile
-            document.getElementById('regInput').value = savedReg;
-            lookupStudent();
+            lookupStudent(savedReg);
         };
 
         function logout() {
@@ -188,28 +179,10 @@
             window.location.href = 'index.html';
         }
 
-
-        // Allow Enter key to trigger lookup
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('regInput').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') lookupStudent();
-            });
-        });
-
-        async function lookupStudent() {
-            const regInput     = document.getElementById('regInput');
-            const regNumber    = regInput.value.trim();
+        async function lookupStudent(regNumber) {
             const errorDisplay = document.getElementById('errorDisplay');
             const profileSection = document.getElementById('profileSection');
-            const btn          = document.getElementById('lookupBtn');
-
-            if (!regNumber) return;
-
-            // Loading state
-            btn.innerText = 'Loading…';
-            btn.disabled  = true;
-            errorDisplay.classList.add('hidden');
-            profileSection.classList.add('hidden');
+            const loadingState = document.getElementById('loadingState');
 
             try {
                 const res  = await fetch(`${API_BASE}/student/${encodeURIComponent(regNumber)}`);
@@ -217,37 +190,37 @@
 
                 if (res.ok) {
                     displayProfile(data, regNumber);
+                    loadingState.classList.add('hidden');
                     errorDisplay.classList.add('hidden');
                 } else {
+                    loadingState.classList.add('hidden');
                     errorDisplay.innerText = data.error === 'Student not found'
                         ? '⚠️ Student not found. Please check your registration number.'
                         : `⚠️ Error: ${data.error || 'Unknown error'}`;
                     errorDisplay.classList.remove('hidden');
-                    profileSection.classList.add('hidden');
                 }
             } catch (err) {
                 console.error('Connection Error:', err);
+                loadingState.classList.add('hidden');
                 errorDisplay.innerText = '⚠️ Connection Error. Please ensure the backend is live.';
                 errorDisplay.classList.remove('hidden');
-                profileSection.classList.add('hidden');
-            } finally {
-                btn.innerText = 'Search';
-                btn.disabled  = false;
             }
         }
 
         function displayProfile(data, regNumber) {
             document.getElementById('studentName').innerText = data.name || 'Unknown';
-            document.getElementById('studentReg').innerText  = 'Registration No: ' + regNumber;
+            document.getElementById('studentReg').innerText  = regNumber;
+            document.getElementById('studentProgram').innerText = data.program || 'Not Assigned';
+            document.getElementById('nfcUid').innerText = data.nfc_uid || 'N/A';
 
-            // fee_status is a PostgreSQL BOOLEAN → native JS true/false
+            // fee_status
             const feeStatus = document.getElementById('feeStatus');
             if (data.fee_status === true) {
                 feeStatus.innerText   = '✅ Cleared';
-                feeStatus.className   = 'pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase bg-green-100 text-green-800 border-2 border-green-600';
+                feeStatus.className   = 'pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase bg-green-100 text-green-800 border-2 border-green-600 shadow-sm';
             } else {
                 feeStatus.innerText   = '⏳ Pending';
-                feeStatus.className   = 'pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase bg-red-100 text-red-800 border-2 border-red-600';
+                feeStatus.className   = 'pulse-badge inline-block px-5 py-2 rounded-full text-sm font-black uppercase bg-red-100 text-red-800 border-2 border-red-600 shadow-sm';
             }
 
             // Access history
@@ -256,31 +229,28 @@
 
             if (data.logs && data.logs.length > 0) {
                 tapCount.innerText = `${data.logs.length} record${data.logs.length !== 1 ? 's' : ''}`;
-                tapsList.innerHTML = data.logs.map(log => `
-                    <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50 border-l-4
-                                ${log.status === 'Access Granted' ? 'border-green-500' : 'border-red-500'} animate-reveal">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-700">
-                                ${log.status === 'Access Granted' ? '✅' : '❌'} ${log.status}
-                            </p>
-                            <p class="text-[10px] text-gray-400 mt-0.5">
-                                ${new Date(log.access_time).toLocaleString('en-GB', {
-                                    day: '2-digit', month: 'short', year: 'numeric',
-                                    hour: '2-digit', minute: '2-digit'
-                                })}
-                            </p>
-                        </div>
-                        <span class="text-[10px] font-black px-2 py-1 rounded border
-                                     ${log.status === 'Access Granted'
-                                        ? 'border-green-500 text-green-700 bg-green-50'
-                                        : 'border-red-500 text-red-700 bg-red-50'} uppercase">
-                            ${log.status === 'Access Granted' ? 'Granted' : 'Denied'}
-                        </span>
-                    </div>
-                `).join('');
+                tapsList.innerHTML = data.logs.map(log => {
+                    const isGranted = log.status === 'Access Granted';
+                    const dateStr = new Date(log.access_time).toLocaleString('en-GB', {
+                        day: '2-digit', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                    
+                    const statusBadge = isGranted 
+                        ? `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-green-100 text-green-700 border border-green-300">GRANTED</span>`
+                        : `<span class="px-3 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-300">DENIED</span>`;
+
+                    return `
+                        <tr class="transition-colors border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                            <td class="text-xs text-gray-600 font-medium">${dateStr}</td>
+                            <td class="text-xs font-semibold text-gray-800">${log.facility || 'Main Gate'}</td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                }).join('');
             } else {
                 tapCount.innerText = '0 records';
-                tapsList.innerHTML = '<p class="text-center text-gray-400 italic text-sm py-6">No access records yet.</p>';
+                tapsList.innerHTML = `<tr><td colspan="3" class="text-center text-gray-400 italic text-sm py-6">No access records yet.</td></tr>`;
             }
 
             document.getElementById('profileSection').classList.remove('hidden');

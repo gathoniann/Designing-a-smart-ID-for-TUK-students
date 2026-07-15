@@ -272,10 +272,27 @@
                 const password = document.getElementById('adminPassword').value.trim();
 
                 if (!username || !password) return showError('Please fill in all fields.');
-                if (password !== 'admin123') return showError('Invalid credentials. Access Denied.');
 
-                sessionStorage.setItem('adminUser', username);
-                window.location.href = 'admin.html';
+                setLoading(true);
+                try {
+                    const res  = await fetch(`${API_BASE}/admin/login`, {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        sessionStorage.setItem('adminUser', username);
+                        window.location.href = 'admin.html';
+                    } else {
+                        showError(data.message || 'Invalid credentials. Access Denied.');
+                    }
+                } catch (err) {
+                    showError('Connection error. Please try again.');
+                } finally {
+                    setLoading(false);
+                }
             } else {
                 const regNumber = document.getElementById('studentReg').value.trim().toUpperCase();
                 const password  = document.getElementById('studentPassword').value.trim();

@@ -91,6 +91,38 @@ app.post('/login', async (req, res) => {
     }
 });
 
+/**
+ * ADMIN LOGIN ROUTE
+ * Authenticates an admin by username + password.
+ */
+app.post('/admin/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Username and password are required.' });
+    }
+
+    try {
+        const query = 'SELECT username FROM admins WHERE username = $1 AND password = $2';
+        const result = await pool.query(query, [username, password]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+        }
+
+        const admin = result.rows[0];
+        res.json({
+            success: true,
+            message: 'Login successful',
+            username: admin.username
+        });
+    } catch (err) {
+        const msg = err.message || err.toString();
+        console.error('Admin login error:', msg);
+        res.status(500).json({ success: false, message: 'Server error. Please try again.' });
+    }
+});
+
 
 /**
  * VERIFICATION ROUTE
@@ -115,8 +147,9 @@ app.post('/verify', async (req, res) => {
             const status = isCleared ? 'Access Granted' : 'Access Denied';
 
             // Record activity in access_logs (fire-and-forget, don't block response)
-            const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status) VALUES ($1, $2, $3)';
-            pool.query(logQuery, [student.student_name, student.reg_number, status])
+            const facility = req.body.facility || 'Main Gate';
+            const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
+            pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
                 .catch(logErr => console.error('Logging failed:', logErr.message));
 
             if (isCleared) {
@@ -159,7 +192,7 @@ app.get('/student/:reg_number', async (req, res) => {
     const { reg_number } = req.params;
 
     try {
-        const studentQuery = 'SELECT student_name, fee_status FROM students WHERE reg_number = $1';
+        const studentQuery = 'SELECT student_name, fee_status, nfc_uid, program FROM students WHERE reg_number = $1';
         const studentResult = await pool.query(studentQuery, [reg_number]);
 
         if (studentResult.rows.length === 0) {
@@ -168,12 +201,14 @@ app.get('/student/:reg_number', async (req, res) => {
 
         const student = studentResult.rows[0];
 
-        const logsQuery = 'SELECT access_time, status FROM access_logs WHERE reg_number = $1 ORDER BY access_time DESC LIMIT 15';
+        const logsQuery = 'SELECT access_time, status, facility FROM access_logs WHERE reg_number = $1 ORDER BY access_time DESC LIMIT 15';
         const logsResult = await pool.query(logsQuery, [reg_number]);
 
         res.json({
             name:       student.student_name,
             fee_status: student.fee_status,
+            nfc_uid:    student.nfc_uid,
+            program:    student.program,
             logs:       logsResult.rows
         });
     } catch (err) {
