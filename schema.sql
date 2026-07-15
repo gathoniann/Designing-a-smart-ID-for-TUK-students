@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS students (
     reg_number     VARCHAR(50)  NOT NULL UNIQUE,
     nfc_uid        VARCHAR(100) NOT NULL UNIQUE,
     fee_status     BOOLEAN      NOT NULL DEFAULT false,  -- true = cleared, false = pending
-    password       VARCHAR(255) NOT NULL DEFAULT 'student123', -- plain text for prototype; use bcrypt in production
+    password       VARCHAR(255) NOT NULL DEFAULT 'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', -- hashed 'student123'
     program        VARCHAR(255) NOT NULL DEFAULT 'BSc Information Science',
     wallet_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     created_at     TIMESTAMP    NOT NULL DEFAULT NOW()
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS access_logs (
 CREATE TABLE IF NOT EXISTS admins (
     id          SERIAL PRIMARY KEY,
     username    VARCHAR(100) NOT NULL UNIQUE,
-    password    VARCHAR(255) NOT NULL DEFAULT 'admin123', -- plain text for prototype; use bcrypt in production
+    password    VARCHAR(255) NOT NULL DEFAULT 'ee26b77b8870aa021a33b78707a95a3d2070626d7eb7a35593c5452010fc3516599950ae1bbb7666200d250530cd9e52401fc70bbe1092ed5c6864bc80bce76b', -- hashed 'admin123'
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 -- Upgrading schema fields dynamically (safe to run on existing tables)
-ALTER TABLE students ADD COLUMN IF NOT EXISTS password VARCHAR(255) NOT NULL DEFAULT 'student123';
+ALTER TABLE students ADD COLUMN IF NOT EXISTS password VARCHAR(255) NOT NULL DEFAULT 'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a';
 ALTER TABLE students ADD COLUMN IF NOT EXISTS program VARCHAR(255) NOT NULL DEFAULT 'BSc Information Science';
 ALTER TABLE students ADD COLUMN IF NOT EXISTS wallet_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00;
 ALTER TABLE access_logs ADD COLUMN IF NOT EXISTS facility VARCHAR(100) NOT NULL DEFAULT 'Main Gate';
@@ -61,9 +61,9 @@ CREATE INDEX IF NOT EXISTS idx_transactions_reg     ON transactions(reg_number);
 -- All students have default password: student123
 -- ============================================================
 INSERT INTO students (student_name, reg_number, nfc_uid, fee_status, password, program, wallet_balance) VALUES
-    ('Jane Wanjiku',   'AIIM/00476/2022', 'ABC12345', true,  'student123', 'BSc Information Science', 550.00),
-    ('John Kamau',     'SBFE/02145/2022', 'DEF67890', false, 'student123', 'BSc Computer Science', 120.00),
-    ('Alice Akinyi',   'ABBQ/00001/2021', 'GHI11223', true,  'student123', 'BSc Software Engineering', 1500.00)
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'ABC12345', true,  'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Information Science', 550.00),
+    ('John Kamau',     'SBFE/02145/2022', 'DEF67890', false, 'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Computer Science', 120.00),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'GHI11223', true,  'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Software Engineering', 1500.00)
 ON CONFLICT (reg_number) DO UPDATE SET 
     password = EXCLUDED.password,
     fee_status = EXCLUDED.fee_status,
@@ -74,7 +74,7 @@ ON CONFLICT (reg_number) DO UPDATE SET
 
 -- Seed administrators
 INSERT INTO admins (username, password) VALUES 
-    ('admin', 'admin123')
+    ('admin', 'ee26b77b8870aa021a33b78707a95a3d2070626d7eb7a35593c5452010fc3516599950ae1bbb7666200d250530cd9e52401fc70bbe1092ed5c6864bc80bce76b')
 ON CONFLICT (username) DO UPDATE SET 
     password = EXCLUDED.password;
 

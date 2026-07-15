@@ -3,11 +3,21 @@ require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
+const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+
+/**
+ * PASSWORD HASHING HELPER
+ * Hashes passwords securely using PBKDF2 with SHA-512.
+ */
+function hashPassword(password) {
+    const salt = 'tuk_smart_id_salt_2026';
+    return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+}
 
 
 // Startup env var validation — catches missing Render environment variables immediately
@@ -72,8 +82,9 @@ app.post('/login', async (req, res) => {
     }
 
     try {
+        const hashedPassword = hashPassword(password);
         const query = 'SELECT student_name, reg_number, fee_status FROM students WHERE reg_number = $1 AND password = $2';
-        const result = await pool.query(query, [reg_number, password]);
+        const result = await pool.query(query, [reg_number, hashedPassword]);
 
         if (result.rows.length === 0) {
             return res.status(401).json({ success: false, message: 'Invalid registration number or password.' });
@@ -105,8 +116,9 @@ app.post('/admin/login', async (req, res) => {
     }
 
     try {
+        const hashedPassword = hashPassword(password);
         const query = 'SELECT username FROM admins WHERE username = $1 AND password = $2';
-        const result = await pool.query(query, [username, password]);
+        const result = await pool.query(query, [username, hashedPassword]);
 
         if (result.rows.length === 0) {
             return res.status(401).json({ success: false, message: 'Invalid username or password.' });
