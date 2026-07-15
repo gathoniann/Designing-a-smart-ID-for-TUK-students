@@ -46,6 +46,16 @@
                     </h1>
                     <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">My ID Dashboard</p>
                     <div class="flex items-center gap-3 mt-0.5">
+                        <a href="admin.html"
+                           class="text-xs font-semibold text-green-700 hover:text-green-900 underline transition-colors">
+                            ← Security Terminal
+                        </a>
+                        <span class="text-gray-300">|</span>
+                        <a href="pos.html"
+                           class="text-xs font-semibold text-green-700 hover:text-green-900 underline transition-colors">
+                            🛒 POS Terminal
+                        </a>
+                        <span class="text-gray-300">|</span>
                         <button onclick="logout()"
                                 class="text-xs font-semibold text-red-500 hover:text-red-700 underline transition-colors">
                             Sign Out
@@ -112,30 +122,76 @@
                 </div>
             </div>
 
-            <!-- Access History Table -->
-            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-                <div class="bg-gray-100 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                    <h2 class="text-gray-800 font-bold uppercase text-sm tracking-wider">🕐 Access History</h2>
-                    <span id="tapCount" class="text-[10px] font-black text-gray-500 uppercase bg-white border border-gray-200 px-2 py-1 rounded-full shadow-sm"></span>
-                </div>
+            <!-- Dashboard Grid: Access Logs (Left) & Digital Wallet (Right) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                <div class="overflow-x-auto max-h-80">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="sticky top-0 shadow-sm z-10">
-                            <tr>
-                                <th>Date & Time</th>
-                                <th>Facility</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tapsList">
-                            <!-- Rows injected by JS -->
-                        </tbody>
-                    </table>
+                <!-- Left Column: Access History Table -->
+                <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden flex flex-col h-fit">
+                    <div class="bg-gray-100 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                        <h2 class="text-gray-800 font-bold uppercase text-sm tracking-wider">🕐 Access History</h2>
+                        <span id="tapCount" class="text-[10px] font-black text-gray-500 uppercase bg-white border border-gray-200 px-2 py-1 rounded-full shadow-sm"></span>
+                    </div>
+                    
+                    <div class="overflow-x-auto max-h-80">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="sticky top-0 shadow-sm z-10">
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Facility</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tapsList">
+                                <!-- Rows injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 text-[10px] text-gray-400 font-bold uppercase text-center tracking-widest mt-auto">
+                        Showing last 15 tap records
+                    </div>
                 </div>
-                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 text-[10px] text-gray-400 font-bold uppercase text-center tracking-widest">
-                    Showing last 15 tap records
+
+                <!-- Right Column: Digital Wallet -->
+                <div class="space-y-6">
+                    <!-- Balance Display -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden p-6 flex items-center justify-between">
+                        <div class="space-y-1">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Prepaid Campus Wallet</p>
+                            <h3 class="text-gray-500 text-xs font-semibold">Available Balance</h3>
+                            <div id="walletBalance" class="text-3xl font-extrabold text-green-700 tracking-tight mt-1">KES 0.00</div>
+                        </div>
+                        <div class="w-16 h-16 rounded-full bg-green-50 border-2 border-green-600 flex items-center justify-center text-3xl shadow-inner">
+                            💳
+                        </div>
+                    </div>
+
+                    <!-- Wallet Transactions Table -->
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                        <div class="bg-gray-100 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                            <h2 class="text-gray-800 font-bold uppercase text-sm tracking-wider">💸 Recent Transactions</h2>
+                            <span id="transactionCount" class="text-[10px] font-black text-gray-500 uppercase bg-white border border-gray-200 px-2 py-1 rounded-full shadow-sm">0 records</span>
+                        </div>
+                        
+                        <div class="overflow-x-auto max-h-56">
+                            <table class="w-full text-left text-sm whitespace-nowrap">
+                                <thead class="sticky top-0 shadow-sm z-10">
+                                    <tr>
+                                        <th>Date & Time</th>
+                                        <th>Service Point</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsList">
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 bg-gray-50 border-t border-gray-200 text-[10px] text-gray-400 font-bold uppercase text-center tracking-widest">
+                            Showing last 10 wallet events
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
         </section>
@@ -213,6 +269,9 @@
             document.getElementById('studentProgram').innerText = data.program || 'Not Assigned';
             document.getElementById('nfcUid').innerText = data.nfc_uid || 'N/A';
 
+            // wallet balance
+            document.getElementById('walletBalance').innerText = 'KES ' + parseFloat(data.wallet_balance || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
             // fee_status
             const feeStatus = document.getElementById('feeStatus');
             if (data.fee_status === true) {
@@ -251,6 +310,35 @@
             } else {
                 tapCount.innerText = '0 records';
                 tapsList.innerHTML = `<tr><td colspan="3" class="text-center text-gray-400 italic text-sm py-6">No access records yet.</td></tr>`;
+            }
+
+            // Wallet Transactions
+            const transactionsList = document.getElementById('transactionsList');
+            const transactionCount = document.getElementById('transactionCount');
+
+            if (data.transactions && data.transactions.length > 0) {
+                transactionCount.innerText = `${data.transactions.length} record${data.transactions.length !== 1 ? 's' : ''}`;
+                transactionsList.innerHTML = data.transactions.map(tx => {
+                    const isCredit = tx.transaction_type === 'CREDIT';
+                    const dateStr = new Date(tx.transaction_time).toLocaleString('en-GB', {
+                        day: '2-digit', month: 'short',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                    
+                    const amtSign = isCredit ? '+' : '-';
+                    const amtClass = isCredit ? 'text-green-700 font-bold' : 'text-red-700 font-bold';
+
+                    return `
+                        <tr class="transition-colors border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                            <td class="text-xs text-gray-600 font-medium">${dateStr}</td>
+                            <td class="text-xs font-semibold text-gray-800">${tx.service_point}</td>
+                            <td class="text-xs ${amtClass}">${amtSign}KES ${parseFloat(tx.amount).toFixed(2)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                transactionCount.innerText = '0 records';
+                transactionsList.innerHTML = `<tr><td colspan="3" class="text-center text-gray-400 italic text-sm py-6">No wallet transactions yet.</td></tr>`;
             }
 
             document.getElementById('profileSection').classList.remove('hidden');
