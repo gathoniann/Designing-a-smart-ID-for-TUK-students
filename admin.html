@@ -42,7 +42,28 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 pb-12">
+    <main class="max-w-6xl mx-auto px-4 pb-12">
+        <!-- Live Dashboard Analytics Metrics -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-5 flex flex-col justify-between">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Taps (Today)</span>
+                <span id="metric-taps" class="text-3xl font-black text-tuk-green mt-1">0</span>
+            </div>
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-5 flex flex-col justify-between">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Denial Rate (Today)</span>
+                <span id="metric-denied" class="text-3xl font-black text-red-600 mt-1">0%</span>
+            </div>
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-5 flex flex-col justify-between">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">POS Revenue (Today)</span>
+                <span id="metric-revenue" class="text-3xl font-black text-blue-600 mt-1">KES 0.00</span>
+            </div>
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-5 flex flex-col justify-between">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Facilities</span>
+                <span id="metric-facilities" class="text-3xl font-black text-purple-600 mt-1">0</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         <section class="lg:col-span-7">
             <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
@@ -118,6 +139,7 @@
             </div>
         </section>
 
+        </div>
     </main>
 
     <script>
@@ -169,6 +191,7 @@
                 
                 updateUI(data);
                 updateLogs();
+                updateAnalytics();
                 uidField.value = ""; 
                 uidField.focus();
             } catch (err) {
@@ -230,8 +253,23 @@
             }
         }
         
+        async function updateAnalytics() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/analytics`);
+                const data = await res.json();
+                
+                document.getElementById('metric-taps').innerText = data.taps_today;
+                document.getElementById('metric-denied').innerText = data.denial_rate + '%';
+                document.getElementById('metric-revenue').innerText = 'KES ' + data.revenue_today.toFixed(2);
+                document.getElementById('metric-facilities').innerText = data.active_facilities;
+            } catch (err) {
+                console.warn("Analytics fetch failed.");
+            }
+        }
+        
         loadFacility();
         updateLogs();
+        updateAnalytics();
     </script>
 </body>
 </html>

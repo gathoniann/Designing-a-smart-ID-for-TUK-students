@@ -412,6 +412,49 @@ app.get('/transactions', async (req, res) => {
     }
 });
 
+/**
+ * ADMIN ANALYTICS ROUTE
+ * Computes live administrative metrics for today's logs and POS transactions.
+ */
+app.get('/admin/analytics', async (req, res) => {
+    try {
+        // Taps today count
+        const tapsQuery = "SELECT COUNT(*) FROM access_logs WHERE access_time::date = CURRENT_DATE";
+        const tapsResult = await pool.query(tapsQuery);
+        const tapsToday = parseInt(tapsResult.rows[0].count);
+
+        // Denied taps count today
+        const deniedQuery = "SELECT COUNT(*) FROM access_logs WHERE access_time::date = CURRENT_DATE AND status LIKE 'Access Denied%'";
+        const deniedResult = await pool.query(deniedQuery);
+        const deniedToday = parseInt(deniedResult.rows[0].count);
+
+        const denialRate = tapsToday > 0 
+            ? parseFloat(((deniedToday / tapsToday) * 100).toFixed(1)) 
+            : 0.0;
+
+        // POS revenue today (transaction_type = 'DEBIT' on current date)
+        const revenueQuery = "SELECT SUM(amount) FROM transactions WHERE transaction_time::date = CURRENT_DATE AND transaction_type = 'DEBIT'";
+        const revenueResult = await pool.query(revenueQuery);
+        const revenueToday = parseFloat(revenueResult.rows[0].sum || 0).toFixed(2);
+
+        // Unique active facility count today
+        const facilitiesQuery = "SELECT COUNT(DISTINCT facility) FROM access_logs WHERE access_time::date = CURRENT_DATE";
+        const facilitiesResult = await pool.query(facilitiesQuery);
+        const activeFacilities = parseInt(facilitiesResult.rows[0].count);
+
+        res.json({
+            taps_today: tapsToday,
+            denial_rate: denialRate,
+            revenue_today: parseFloat(revenueToday),
+            active_facilities: activeFacilities
+        });
+    } catch (err) {
+        const msg = err.message || err.toString();
+        console.error('Analytics error:', msg);
+        res.status(500).json({ error: 'Database error', message: msg });
+    }
+});
+
 // Use the port provided by Render (usually 10000) or default to 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
