@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_access_logs_reg     ON access_logs(reg_number);
 -- All students have default password: student123
 -- ============================================================
 INSERT INTO students (student_name, reg_number, nfc_uid, fee_status, password) VALUES
-    ('Jane Wanjiku',   'TUK/2021/001', 'ABC12345', true,  'student123'),
-    ('John Kamau',     'TUK/2022/045', 'DEF67890', false, 'student123'),
-    ('Alice Akinyi',   'TUK/2020/112', 'GHI11223', true,  'student123')
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'ABC12345', true,  'student123'),
+    ('John Kamau',     'SBFE/02145/2022', 'DEF67890', false, 'student123'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'GHI11223', true,  'student123')
 ON CONFLICT (reg_number) DO UPDATE SET password = EXCLUDED.password;
