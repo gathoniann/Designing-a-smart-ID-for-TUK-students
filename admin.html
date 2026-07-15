@@ -53,8 +53,19 @@
                 </div>
                 
                 <div class="p-8">
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Terminal Facility / Location</label>
+                        <select id="facilitySelect" onchange="saveFacility()"
+                                class="w-full bg-gray-50 border-2 border-gray-300 rounded p-3 text-lg font-semibold text-gray-700 focus:border-tuk-green focus:ring-0 transition-all outline-none">
+                            <option value="Main Gate">Main Gate</option>
+                            <option value="Main Library">Main Library</option>
+                            <option value="Computer Science Lab">Computer Science Lab</option>
+                            <option value="Engineering Lab">Engineering Lab</option>
+                        </select>
+                    </div>
+
                     <div class="mb-6">
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Scan Student ID / Enter UID [cite: 75]</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Scan Student ID / Enter UID</label>
                         <input type="text" id="nfcInput" autofocus
                                placeholder="Waiting for card tap..." 
                                class="w-full bg-gray-50 border-2 border-gray-300 rounded p-4 text-2xl font-mono focus:border-tuk-green focus:ring-0 transition-all outline-none text-center uppercase">
@@ -129,16 +140,30 @@
             }
         }
 
+        function saveFacility() {
+            const fac = document.getElementById('facilitySelect').value;
+            sessionStorage.setItem('selected_facility', fac);
+        }
+
+        function loadFacility() {
+            const saved = sessionStorage.getItem('selected_facility');
+            if (saved) {
+                document.getElementById('facilitySelect').value = saved;
+            }
+        }
+
         async function verifyStudent() {
             const uidField = document.getElementById('nfcInput');
             const uid = uidField.value.trim();
             if(!uid) return;
 
+            const selectedFacility = document.getElementById('facilitySelect').value;
+
             try {
                 const res = await fetch(`${API_BASE}/verify`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({nfc_uid: uid})
+                    body: JSON.stringify({nfc_uid: uid, facility: selectedFacility})
                 });
                 const data = await res.json();
                 
@@ -187,13 +212,13 @@
                 const logContainer = document.getElementById('logTable');
                 
                 logContainer.innerHTML = logs.map(l => `
-                    <div class="log-entry flex items-center justify-between p-3 rounded bg-gray-50 border-l-4 ${l.status === 'Access Granted' ? 'border-green-600' : 'border-red-600'}">
+                    <div class="log-entry flex items-center justify-between p-3 rounded bg-gray-50 border-l-4 ${l.status.startsWith('Access Granted') ? 'border-green-600' : 'border-red-600'}">
                         <div>
-                            <p class="font-bold text-xs uppercase text-gray-700">${l.student_name}</p>
+                            <p class="font-bold text-xs uppercase text-gray-700">${l.student_name} (${l.facility})</p>
                             <p class="text-[10px] font-bold text-tuk-green">${new Date(l.access_time).toLocaleTimeString()}</p>
                         </div>
-                        <span class="text-[10px] font-black px-2 py-1 rounded border ${l.status === 'Access Granted' ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600'} uppercase">
-                            ${l.status === 'Access Granted' ? 'Cleared' : 'Blocked'}
+                        <span class="text-[10px] font-black px-2 py-1 rounded border ${l.status.startsWith('Access Granted') ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600'} uppercase">
+                            ${l.status.startsWith('Access Granted') ? 'Cleared' : 'Blocked'}
                         </span>
                     </div>
                 `).join('');
@@ -205,6 +230,7 @@
             }
         }
         
+        loadFacility();
         updateLogs();
     </script>
 </body>

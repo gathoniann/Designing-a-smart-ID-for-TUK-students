@@ -30,7 +30,7 @@ async function runUpdate() {
         console.log('SUCCESS: Schema applied.');
 
         console.log('Querying current students list...');
-        const resStudents = await client.query('SELECT id, student_name, reg_number, nfc_uid, fee_status, program, wallet_balance FROM students');
+        const resStudents = await client.query('SELECT id, student_name, reg_number, nfc_uid, fee_status, program, wallet_balance, allowed_facilities FROM students');
         console.table(resStudents.rows);
 
         console.log('Querying current admins list...');

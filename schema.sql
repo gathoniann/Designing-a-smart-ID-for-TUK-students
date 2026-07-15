@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS students (
     password       VARCHAR(255) NOT NULL DEFAULT 'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', -- hashed 'student123'
     program        VARCHAR(255) NOT NULL DEFAULT 'BSc Information Science',
     wallet_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    allowed_facilities VARCHAR(255) NOT NULL DEFAULT 'Main Gate, Main Library',
     created_at     TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 ALTER TABLE students ADD COLUMN IF NOT EXISTS password VARCHAR(255) NOT NULL DEFAULT 'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a';
 ALTER TABLE students ADD COLUMN IF NOT EXISTS program VARCHAR(255) NOT NULL DEFAULT 'BSc Information Science';
 ALTER TABLE students ADD COLUMN IF NOT EXISTS wallet_balance DECIMAL(10, 2) NOT NULL DEFAULT 0.00;
+ALTER TABLE students ADD COLUMN IF NOT EXISTS allowed_facilities VARCHAR(255) NOT NULL DEFAULT 'Main Gate, Main Library';
 ALTER TABLE access_logs ADD COLUMN IF NOT EXISTS facility VARCHAR(100) NOT NULL DEFAULT 'Main Gate';
 
 -- Indexes for fast lookups
@@ -60,17 +62,18 @@ CREATE INDEX IF NOT EXISTS idx_transactions_reg     ON transactions(reg_number);
 -- Sample test data (remove before going live)
 -- All students have default password: student123
 -- ============================================================
-INSERT INTO students (student_name, reg_number, nfc_uid, fee_status, password, program, wallet_balance) VALUES
-    ('Jane Wanjiku',   'AIIM/00476/2022', 'ABC12345', true,  'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Information Science', 550.00),
-    ('John Kamau',     'SBFE/02145/2022', 'DEF67890', false, 'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Computer Science', 120.00),
-    ('Alice Akinyi',   'ABBQ/00001/2021', 'GHI11223', true,  'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Software Engineering', 1500.00)
+INSERT INTO students (student_name, reg_number, nfc_uid, fee_status, password, program, wallet_balance, allowed_facilities) VALUES
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'ABC12345', true,  'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Information Science', 550.00, 'Main Gate, Main Library'),
+    ('John Kamau',     'SBFE/02145/2022', 'DEF67890', false, 'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Computer Science', 120.00, 'Main Gate, Main Library, Computer Science Lab'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'GHI11223', true,  'e8d3db1cdb723b79e5c97fc6bf6e040b0811e88fccecaa172ba749b47f2515cf101ad8771a1b60dfaa20b78035ac660351309c6e0939706751132f39179d526a', 'BSc Software Engineering', 1500.00, 'Main Gate, Main Library, Computer Science Lab, Engineering Lab')
 ON CONFLICT (reg_number) DO UPDATE SET 
     password = EXCLUDED.password,
     fee_status = EXCLUDED.fee_status,
     nfc_uid = EXCLUDED.nfc_uid,
     program = EXCLUDED.program,
     student_name = EXCLUDED.student_name,
-    wallet_balance = EXCLUDED.wallet_balance;
+    wallet_balance = EXCLUDED.wallet_balance,
+    allowed_facilities = EXCLUDED.allowed_facilities;
 
 -- Seed administrators
 INSERT INTO admins (username, password) VALUES 

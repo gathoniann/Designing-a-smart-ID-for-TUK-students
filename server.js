@@ -144,31 +144,48 @@ app.post('/admin/login', async (req, res) => {
  */
 app.post('/verify', async (req, res) => {
     const { nfc_uid } = req.body;
+    const facility = req.body.facility || 'Main Gate';
 
     if (!nfc_uid) {
         return res.status(400).json({ status: 'Error', message: 'nfc_uid is required' });
     }
 
     try {
-        // PostgreSQL uses $1, $2, ... numbered placeholders
         const findStudent = 'SELECT * FROM students WHERE nfc_uid = $1';
         const { rows } = await pool.query(findStudent, [nfc_uid]);
 
         if (rows.length > 0) {
             const student = rows[0];
-            // fee_status is a BOOLEAN column in PostgreSQL — returns true/false natively
+            
+            // 1. Verify Facility Access
+            const allowed = student.allowed_facilities || 'Main Gate, Main Library';
+            const allowedList = allowed.split(',').map(f => f.trim());
+            const isAllowedFacility = allowedList.includes(facility);
+
+            if (!isAllowedFacility) {
+                const status = 'Access Denied: Unauthorized Facility';
+                const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
+                pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
+                    .catch(logErr => console.error('Logging failed:', logErr.message));
+                
+                return res.json({ status: 'Access Denied', message: 'Unauthorized Facility Access' });
+            }
+
+            // 2. Verify Fee Status
             const isCleared = student.fee_status === true;
-            const status = isCleared ? 'Access Granted' : 'Access Denied';
-
-            // Record activity in access_logs (fire-and-forget, don't block response)
-            const facility = req.body.facility || 'Main Gate';
-            const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
-            pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
-                .catch(logErr => console.error('Logging failed:', logErr.message));
-
             if (isCleared) {
+                const status = 'Access Granted';
+                const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
+                pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
+                    .catch(logErr => console.error('Logging failed:', logErr.message));
+
                 res.json({ status: 'Access Granted', name: student.student_name, reg: student.reg_number });
             } else {
+                const status = 'Access Denied: Fee Balance';
+                const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
+                pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
+                    .catch(logErr => console.error('Logging failed:', logErr.message));
+
                 res.json({ status: 'Access Denied', message: 'Fee Balance Pending' });
             }
         } else {
