@@ -154,15 +154,21 @@
                 <!-- Right Column: Digital Wallet -->
                 <div class="space-y-6">
                     <!-- Balance Display -->
-                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden p-6 flex items-center justify-between">
-                        <div class="space-y-1">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Prepaid Campus Wallet</p>
-                            <h3 class="text-gray-500 text-xs font-semibold">Available Balance</h3>
-                            <div id="walletBalance" class="text-3xl font-extrabold text-green-700 tracking-tight mt-1">KES 0.00</div>
+                    <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden p-6 flex flex-col gap-4">
+                        <div class="flex items-center justify-between">
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Prepaid Campus Wallet</p>
+                                <h3 class="text-gray-500 text-xs font-semibold">Available Balance</h3>
+                                <div id="walletBalance" class="text-3xl font-extrabold text-green-700 tracking-tight mt-1">KES 0.00</div>
+                            </div>
+                            <div class="w-16 h-16 rounded-full bg-green-50 border-2 border-green-600 flex items-center justify-center text-3xl shadow-inner">
+                                💳
+                            </div>
                         </div>
-                        <div class="w-16 h-16 rounded-full bg-green-50 border-2 border-green-600 flex items-center justify-center text-3xl shadow-inner">
-                            💳
-                        </div>
+                        <button onclick="openTopUpModal()" 
+                                class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2.5 px-4 rounded-lg transition-colors shadow-sm text-xs uppercase tracking-wider">
+                            Top-Up Wallet Online
+                        </button>
                     </div>
 
                     <!-- Wallet Transactions Table -->
@@ -198,6 +204,89 @@
 
     </main>
 
+    <!-- ── TOP-UP MODAL ────────────────────────────────────────────── -->
+    <div id="topUpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-300">
+            <!-- Modal Header -->
+            <div class="bg-gray-100 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-gray-800 font-bold uppercase tracking-wider text-sm">💳 Online Wallet Top-Up</h3>
+                <button onclick="closeTopUpModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body / Form -->
+            <div class="p-6 space-y-4">
+                <!-- Amount Input -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Deposit Amount (KES)</label>
+                    <input type="number" id="depositAmount" placeholder="Enter amount (e.g. 500)" min="10" max="10000" step="10"
+                           class="w-full bg-gray-50 border border-gray-300 rounded p-3 outline-none focus:border-green-700 focus:bg-white text-sm font-semibold">
+                </div>
+
+                <!-- Payment Method Tabs -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Payment Method</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="methodMpesa" onclick="setPaymentMethod('mpesa')" 
+                                class="py-2.5 px-4 border-2 border-green-700 rounded-lg text-sm font-bold text-green-700 bg-green-50 transition-all flex items-center justify-center gap-2">
+                            🟢 M-Pesa
+                        </button>
+                        <button id="methodCard" onclick="setPaymentMethod('card')" 
+                                class="py-2.5 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                            💳 Card / Visa
+                        </button>
+                    </div>
+                </div>
+
+                <!-- M-Pesa Details Form -->
+                <div id="mpesaForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">M-Pesa Phone Number</label>
+                        <input type="tel" id="mpesaPhone" placeholder="e.g. 0712345678" value="0712345678"
+                               class="w-full bg-gray-50 border border-gray-300 rounded p-3 outline-none focus:border-green-700 focus:bg-white text-sm font-mono font-semibold">
+                        <p class="text-[10px] text-gray-400 mt-1 italic">Enter the active SAFARICOM mobile number for the STK Push prompt.</p>
+                    </div>
+                </div>
+
+                <!-- Card Details Form (Hidden by default) -->
+                <div id="cardForm" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Cardholder Name</label>
+                        <input type="text" id="cardName" placeholder="Jane Wanjiku"
+                               class="w-full bg-gray-50 border border-gray-300 rounded p-3 outline-none focus:border-green-700 focus:bg-white text-sm font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Card Number</label>
+                        <input type="text" id="cardNumber" placeholder="4000 1234 5678 9010"
+                               class="w-full bg-gray-50 border border-gray-300 rounded p-3 outline-none focus:border-green-700 focus:bg-white text-sm font-mono font-semibold">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Expiry Date</label>
+                            <input type="text" id="cardExpiry" placeholder="MM/YY"
+                                   class="w-full bg-gray-50 border border-gray-300 rounded p-3 outline-none focus:border-green-700 focus:bg-white text-sm font-mono font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">CVV</label>
+                            <input type="password" id="cardCvv" placeholder="***" maxlength="3"
+                                   class="w-full bg-gray-50 border border-gray-300 rounded p-3 outline-none focus:border-green-700 focus:bg-white text-sm font-mono font-semibold">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Message -->
+                <div id="modalFeedback" class="hidden p-3 rounded text-xs font-semibold"></div>
+
+                <!-- Submit Button / Loading Indicator -->
+                <button id="btnSubmitTopUp" onclick="submitTopUp()" 
+                        class="w-full bg-green-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-800 transition-colors shadow-md text-sm uppercase tracking-wider flex items-center justify-center gap-2">
+                    <span>Initiate Payment</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <footer class="text-center py-6 text-[11px] text-gray-400 font-medium uppercase tracking-widest">
         TUK Smart ID System &copy; 2026 — Technical University of Kenya
     </footer>
@@ -221,7 +310,8 @@
         // ── Auth guard: redirect to login if no session ───────────────────
         window.onload = () => {
             const savedReg = sessionStorage.getItem('regNumber');
-            if (!savedReg) {
+            const token = sessionStorage.getItem('studentToken');
+            if (!savedReg || !token) {
                 // Not logged in — redirect to login page
                 window.location.href = 'index.html';
                 return;
@@ -241,7 +331,11 @@
             const loadingState = document.getElementById('loadingState');
 
             try {
-                const res  = await fetch(`${API_BASE}/student/${encodeURIComponent(regNumber)}`);
+                const res  = await fetch(`${API_BASE}/student/${encodeURIComponent(regNumber)}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + sessionStorage.getItem('studentToken')
+                    }
+                });
                 const data = await res.json();
 
                 if (res.ok) {
@@ -342,6 +436,176 @@
             }
 
             document.getElementById('profileSection').classList.remove('hidden');
+        }
+
+        // ─── Wallet Top-Up Modal JS Controls ──────────────────────────────────
+        let selectedPaymentMethod = 'mpesa';
+
+        function openTopUpModal() {
+            const modal = document.getElementById('topUpModal');
+            const feedback = document.getElementById('modalFeedback');
+            const amountInput = document.getElementById('depositAmount');
+            
+            feedback.className = 'hidden';
+            feedback.innerText = '';
+            amountInput.value = '';
+            
+            // Set default payment method
+            setPaymentMethod('mpesa');
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeTopUpModal() {
+            const modal = document.getElementById('topUpModal');
+            modal.classList.add('hidden');
+        }
+
+        function setPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            const mpesaBtn = document.getElementById('methodMpesa');
+            const cardBtn = document.getElementById('methodCard');
+            const mpesaForm = document.getElementById('mpesaForm');
+            const cardForm = document.getElementById('cardForm');
+            const btnSubmit = document.getElementById('btnSubmitTopUp');
+
+            if (method === 'mpesa') {
+                mpesaBtn.className = 'py-2.5 px-4 border-2 border-green-700 rounded-lg text-sm font-bold text-green-700 bg-green-50 transition-all flex items-center justify-center gap-2';
+                cardBtn.className = 'py-2.5 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2';
+                mpesaForm.classList.remove('hidden');
+                cardForm.classList.add('hidden');
+                btnSubmit.innerHTML = '<span>Initiate M-Pesa Payment</span>';
+            } else {
+                cardBtn.className = 'py-2.5 px-4 border-2 border-green-700 rounded-lg text-sm font-bold text-green-700 bg-green-50 transition-all flex items-center justify-center gap-2';
+                mpesaBtn.className = 'py-2.5 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2';
+                cardForm.classList.remove('hidden');
+                mpesaForm.classList.add('hidden');
+                btnSubmit.innerHTML = '<span>Pay KES with Card</span>';
+            }
+        }
+
+        async function submitTopUp() {
+            const amountVal = document.getElementById('depositAmount').value.trim();
+            const feedback = document.getElementById('modalFeedback');
+            const btnSubmit = document.getElementById('btnSubmitTopUp');
+            
+            feedback.className = 'hidden';
+            feedback.innerText = '';
+
+            const amount = parseFloat(amountVal);
+            if (isNaN(amount) || amount <= 0) {
+                showModalError('Please enter a valid deposit amount.');
+                return;
+            }
+
+            if (amount < 10 || amount > 10000) {
+                showModalError('Top-up amount must be between KES 10.00 and KES 10,000.00.');
+                return;
+            }
+
+            if (selectedPaymentMethod === 'mpesa') {
+                const phone = document.getElementById('mpesaPhone').value.trim();
+                if (!/^(?:254|\+254|0)?(7\d{8})$/.test(phone)) {
+                    showModalError('Please enter a valid Safaricom phone number.');
+                    return;
+                }
+            } else {
+                const cardName = document.getElementById('cardName').value.trim();
+                const cardNumber = document.getElementById('cardNumber').value.trim().replace(/\s+/g, '');
+                const cardExpiry = document.getElementById('cardExpiry').value.trim();
+                const cardCvv = document.getElementById('cardCvv').value.trim();
+
+                if (!cardName) {
+                    showModalError('Please enter the cardholder name.');
+                    return;
+                }
+                if (!/^\d{16}$/.test(cardNumber)) {
+                    showModalError('Please enter a valid 16-digit card number.');
+                    return;
+                }
+                if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+                    showModalError('Expiry date must be in MM/YY format.');
+                    return;
+                }
+                if (!/^\d{3}$/.test(cardCvv)) {
+                    showModalError('CVV must be 3 digits.');
+                    return;
+                }
+            }
+
+            // Disable submit button & show processing animation/state
+            btnSubmit.disabled = true;
+            const originalBtnHTML = btnSubmit.innerHTML;
+            if (selectedPaymentMethod === 'mpesa') {
+                btnSubmit.innerHTML = `
+                    <svg class="animate-spin h-5 w-5 text-white inline-block mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Requesting M-Pesa STK...</span>
+                `;
+            } else {
+                btnSubmit.innerHTML = `
+                    <svg class="animate-spin h-5 w-5 text-white inline-block mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Verifying Card payment...</span>
+                `;
+            }
+
+            // Simulate the gateway processing delay (2 seconds)
+            setTimeout(async () => {
+                try {
+                    const regNumber = sessionStorage.getItem('regNumber');
+                    const token = sessionStorage.getItem('studentToken');
+                    const methodLabel = selectedPaymentMethod === 'mpesa' ? 'M-Pesa' : 'Card';
+
+                    const res = await fetch(`${API_BASE}/student/${encodeURIComponent(regNumber)}/topup`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({
+                            amount: amount,
+                            payment_method: methodLabel
+                        })
+                    });
+
+                    const responseData = await res.json();
+
+                    if (res.ok && responseData.success) {
+                        feedback.className = 'p-3 rounded text-xs font-semibold bg-green-50 border border-green-200 text-green-800';
+                        feedback.innerText = `🎉 Success! KES ${amount.toFixed(2)} added via ${methodLabel}.`;
+                        
+                        // Re-fetch student details to refresh UI balance and feeds
+                        lookupStudent(regNumber);
+                        
+                        // Delay modal close so student sees success message
+                        setTimeout(() => {
+                            closeTopUpModal();
+                            btnSubmit.disabled = false;
+                            btnSubmit.innerHTML = originalBtnHTML;
+                        }, 1800);
+                    } else {
+                        showModalError(responseData.message || 'Payment processing failed.');
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = originalBtnHTML;
+                    }
+                } catch (err) {
+                    console.error('Topup Error:', err);
+                    showModalError('Connection error. Please try again.');
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalBtnHTML;
+                }
+            }, 2000);
+        }
+
+        function showModalError(msg) {
+            const feedback = document.getElementById('modalFeedback');
+            feedback.className = 'p-3 rounded text-xs font-semibold bg-red-50 border border-red-200 text-red-800';
+            feedback.innerText = '⚠️ ' + msg;
         }
     </script>
 </body>

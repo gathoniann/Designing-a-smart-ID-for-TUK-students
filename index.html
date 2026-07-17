@@ -288,6 +288,7 @@
 
                     if (res.ok && data.success) {
                         sessionStorage.setItem('adminUser', username);
+                        sessionStorage.setItem('adminToken', data.token);
                         window.location.href = 'admin.html';
                     } else {
                         showError(data.message || 'Invalid credentials. Access Denied.');
@@ -314,6 +315,7 @@
 
                     if (res.ok && data.success) {
                         sessionStorage.setItem('regNumber', regNumber);
+                        sessionStorage.setItem('studentToken', data.token);
                         window.location.href = 'student.html';
                     } else {
                         showError(data.message || 'Invalid credentials. Access Denied.');

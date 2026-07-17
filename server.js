@@ -10,14 +10,58 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'tuk_smart_id_secret_key_2026_jwt';
+
 /**
- * PASSWORD HASHING HELPER
- * Hashes passwords securely using PBKDF2 with SHA-512.
+ * LEGACY PASSWORD HASHING HELPER
+ * Hashes passwords securely using PBKDF2 with SHA-512 for dynamic upgrades.
  */
-function hashPassword(password) {
+function hashOldPassword(password) {
     const salt = 'tuk_smart_id_salt_2026';
     return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
 }
+
+/**
+ * JWT AUTHENTICATION MIDDLEWARES
+ */
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Expecting "Bearer <token>"
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Access Denied. No token provided.' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ success: false, message: 'Invalid or expired session token.' });
+        }
+        req.user = user;
+        next();
+    });
+}
+
+function requireAdmin(req, res, next) {
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Access Denied. Admin access required.' });
+    }
+    next();
+}
+
+function requireStudent(req, res, next) {
+    if (!req.user) {
+        return res.status(403).json({ success: false, message: 'Access Denied.' });
+    }
+    // Allow access if user is admin, or if the student reg_number matches the target path parameter
+    if (req.user.role === 'admin' || req.user.reg_number === req.params.reg_number) {
+        return next();
+    }
+    return res.status(403).json({ success: false, message: 'Access Denied. Unauthorized access to this profile.' });
+}
+
 
 
 // Startup env var validation — catches missing Render environment variables immediately
@@ -82,18 +126,49 @@ app.post('/login', async (req, res) => {
     }
 
     try {
-        const hashedPassword = hashPassword(password);
-        const query = 'SELECT student_name, reg_number, fee_status FROM students WHERE reg_number = $1 AND password = $2';
-        const result = await pool.query(query, [reg_number, hashedPassword]);
+        const query = 'SELECT student_name, reg_number, fee_status, password FROM students WHERE reg_number = $1';
+        const result = await pool.query(query, [reg_number]);
 
         if (result.rows.length === 0) {
             return res.status(401).json({ success: false, message: 'Invalid registration number or password.' });
         }
 
         const student = result.rows[0];
+        const dbPassword = student.password;
+        let isMatch = false;
+
+        // Lazy Migration: check if password in DB is legacy PBKDF2 hash (length 128)
+        if (dbPassword.length === 128) {
+            isMatch = (hashOldPassword(password) === dbPassword);
+            if (isMatch) {
+                // Asynchronously upgrade legacy password to bcrypt
+                try {
+                    const hashedNew = await bcrypt.hash(password, 10);
+                    await pool.query('UPDATE students SET password = $1 WHERE reg_number = $2', [hashedNew, student.reg_number]);
+                    console.log(`Successfully upgraded password hash to Bcrypt for student: ${student.reg_number}`);
+                } catch (migrationErr) {
+                    console.error('Password hash upgrade failed:', migrationErr.message);
+                }
+            }
+        } else {
+            isMatch = await bcrypt.compare(password, dbPassword);
+        }
+
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid registration number or password.' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { reg_number: student.reg_number, name: student.student_name, role: 'student' },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
         res.json({
             success: true,
             message: 'Login successful',
+            token: token,
             name: student.student_name,
             reg_number: student.reg_number
         });
@@ -116,18 +191,48 @@ app.post('/admin/login', async (req, res) => {
     }
 
     try {
-        const hashedPassword = hashPassword(password);
-        const query = 'SELECT username FROM admins WHERE username = $1 AND password = $2';
-        const result = await pool.query(query, [username, hashedPassword]);
+        const query = 'SELECT username, password FROM admins WHERE username = $1';
+        const result = await pool.query(query, [username]);
 
         if (result.rows.length === 0) {
             return res.status(401).json({ success: false, message: 'Invalid username or password.' });
         }
 
         const admin = result.rows[0];
+        const dbPassword = admin.password;
+        let isMatch = false;
+
+        // Lazy Migration check for admin
+        if (dbPassword.length === 128) {
+            isMatch = (hashOldPassword(password) === dbPassword);
+            if (isMatch) {
+                try {
+                    const hashedNew = await bcrypt.hash(password, 10);
+                    await pool.query('UPDATE admins SET password = $1 WHERE username = $2', [hashedNew, admin.username]);
+                    console.log(`Successfully upgraded password hash to Bcrypt for admin: ${admin.username}`);
+                } catch (migrationErr) {
+                    console.error('Admin password upgrade failed:', migrationErr.message);
+                }
+            }
+        } else {
+            isMatch = await bcrypt.compare(password, dbPassword);
+        }
+
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { username: admin.username, role: 'admin' },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
         res.json({
             success: true,
             message: 'Login successful',
+            token: token,
             username: admin.username
         });
     } catch (err) {
@@ -142,7 +247,7 @@ app.post('/admin/login', async (req, res) => {
  * VERIFICATION ROUTE
  * Real-time student identification via NFC UID.
  */
-app.post('/verify', async (req, res) => {
+app.post('/verify', authenticateToken, requireAdmin, async (req, res) => {
     const { nfc_uid } = req.body;
     const facility = req.body.facility || 'Main Gate';
 
@@ -202,7 +307,7 @@ app.post('/verify', async (req, res) => {
  * SYSTEM LOGS
  * Displays the 10 most recent campus access events.
  */
-app.get('/logs', async (req, res) => {
+app.get('/logs', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const { rows } = await pool.query(
             'SELECT * FROM access_logs ORDER BY access_time DESC LIMIT 10'
@@ -219,7 +324,7 @@ app.get('/logs', async (req, res) => {
  * STUDENT PORTAL
  * Retrieves profile and access history by Registration Number.
  */
-app.get('/student/:reg_number', async (req, res) => {
+app.get('/student/:reg_number', authenticateToken, requireStudent, async (req, res) => {
     const { reg_number } = req.params;
 
     try {
@@ -258,7 +363,7 @@ app.get('/student/:reg_number', async (req, res) => {
  * PAYMENT ROUTE
  * Deducts balance from student's wallet using NFC UID.
  */
-app.post('/pay', async (req, res) => {
+app.post('/pay', authenticateToken, requireAdmin, async (req, res) => {
     const { nfc_uid, amount, service_point } = req.body;
 
     if (!nfc_uid || amount === undefined || !service_point) {
@@ -330,7 +435,7 @@ app.post('/pay', async (req, res) => {
  * TOP-UP ROUTE
  * Loads balance to a student's wallet using Registration Number.
  */
-app.post('/topup', async (req, res) => {
+app.post('/topup', authenticateToken, requireAdmin, async (req, res) => {
     const { reg_number, amount } = req.body;
 
     if (!reg_number || amount === undefined) {
@@ -391,10 +496,86 @@ app.post('/topup', async (req, res) => {
 });
 
 /**
+ * STUDENT SELF-SERVICE TOP-UP ROUTE
+ * Loads balance to a student's wallet using their registration number.
+ * Protected by student authorization (the student can only top up their own wallet).
+ */
+app.post('/student/:reg_number/topup', authenticateToken, requireStudent, async (req, res) => {
+    const { reg_number } = req.params;
+    const { amount, payment_method } = req.body;
+
+    if (amount === undefined || !payment_method) {
+        return res.status(400).json({ success: false, message: 'Amount and payment method are required.' });
+    }
+
+    const topupAmount = parseFloat(amount);
+    if (isNaN(topupAmount) || topupAmount <= 0) {
+        return res.status(400).json({ success: false, message: 'Invalid top-up amount.' });
+    }
+
+    if (topupAmount < 10 || topupAmount > 10000) {
+        return res.status(400).json({ success: false, message: 'Top-up amount must be between KES 10.00 and KES 10,000.00.' });
+    }
+
+    if (payment_method !== 'M-Pesa' && payment_method !== 'Card') {
+        return res.status(400).json({ success: false, message: 'Invalid payment method.' });
+    }
+
+    const servicePoint = payment_method === 'M-Pesa' ? 'Online M-Pesa' : 'Online Card';
+
+    try {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const studentQuery = 'SELECT student_name, wallet_balance FROM students WHERE reg_number = $1 FOR UPDATE';
+            const studentResult = await client.query(studentQuery, [reg_number]);
+
+            if (studentResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({ success: false, message: 'Student not found.' });
+            }
+
+            const student = studentResult.rows[0];
+            const currentBalance = parseFloat(student.wallet_balance);
+            const newBalance = currentBalance + topupAmount;
+
+            // Update balance
+            await client.query('UPDATE students SET wallet_balance = $1 WHERE reg_number = $2', [newBalance, reg_number]);
+
+            // Log transaction as CREDIT
+            await client.query(
+                'INSERT INTO transactions (reg_number, service_point, amount, transaction_type) VALUES ($1, $2, $3, \'CREDIT\')',
+                [reg_number, servicePoint, topupAmount]
+            );
+
+            await client.query('COMMIT');
+
+            res.json({
+                success: true,
+                message: 'Top-up Successful',
+                student_name: student.student_name,
+                amount_added: topupAmount,
+                new_balance: newBalance
+            });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        const msg = err.message || err.toString();
+        console.error('Student self top-up error:', msg);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+});
+
+/**
  * RECENT TRANSACTIONS ROUTE
  * Displays the 10 most recent campus wallet transactions.
  */
-app.get('/transactions', async (req, res) => {
+app.get('/transactions', authenticateToken, requireAdmin, async (req, res) => {
     try {
         const query = `
             SELECT t.*, s.student_name 
@@ -416,7 +597,7 @@ app.get('/transactions', async (req, res) => {
  * ADMIN ANALYTICS ROUTE
  * Computes live administrative metrics for today's logs and POS transactions.
  */
-app.get('/admin/analytics', async (req, res) => {
+app.get('/admin/analytics', authenticateToken, requireAdmin, async (req, res) => {
     try {
         // Taps today count
         const tapsQuery = "SELECT COUNT(*) FROM access_logs WHERE access_time::date = CURRENT_DATE";

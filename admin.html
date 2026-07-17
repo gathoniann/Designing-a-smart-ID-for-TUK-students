@@ -32,6 +32,8 @@
                         <a href="student.html" class="text-tuk-green hover:text-green-800 text-xs font-semibold underline">My ID Dashboard →</a>
                         <span class="text-gray-300">|</span>
                         <a href="pos.html" class="text-tuk-green hover:text-green-800 text-xs font-semibold underline">🛒 POS Terminal</a>
+                        <span class="text-gray-300">|</span>
+                        <button onclick="logout()" class="text-red-500 hover:text-red-800 text-xs font-semibold underline">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -143,10 +145,21 @@
     </main>
 
     <script>
+        // ── Auth guard ────────────────────────────────────────────────────────
+        const token = sessionStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
         // ─── API Configuration ────────────────────────────────────────────────
-        // Change this one line to switch between local dev and deployed backend
-        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com'; // local: 'http://localhost:3000'
+        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com';
         // ─────────────────────────────────────────────────────────────────────
+        
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
         setInterval(() => {
             document.getElementById('clock').innerText = new Date().toLocaleTimeString();
         }, 1000);
@@ -184,9 +197,17 @@
             try {
                 const res = await fetch(`${API_BASE}/verify`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + sessionStorage.getItem('adminToken')
+                    },
                     body: JSON.stringify({nfc_uid: uid, facility: selectedFacility})
                 });
+                
+                if (res.status === 401 || res.status === 403) {
+                    return logout();
+                }
+
                 const data = await res.json();
                 
                 updateUI(data);
@@ -230,7 +251,16 @@
 
         async function updateLogs() {
             try {
-                const res = await fetch(`${API_BASE}/logs`);
+                const res = await fetch(`${API_BASE}/logs`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + sessionStorage.getItem('adminToken')
+                    }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    return logout();
+                }
+
                 const logs = await res.json();
                 const logContainer = document.getElementById('logTable');
                 
@@ -255,7 +285,16 @@
         
         async function updateAnalytics() {
             try {
-                const res = await fetch(`${API_BASE}/admin/analytics`);
+                const res = await fetch(`${API_BASE}/admin/analytics`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + sessionStorage.getItem('adminToken')
+                    }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    return logout();
+                }
+
                 const data = await res.json();
                 
                 document.getElementById('metric-taps').innerText = data.taps_today;

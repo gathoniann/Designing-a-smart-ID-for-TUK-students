@@ -33,6 +33,8 @@
                         <a href="admin.html" class="text-tuk-green hover:text-green-800 text-xs font-semibold underline">← Security Terminal</a>
                         <span class="text-gray-300">|</span>
                         <a href="student.html" class="text-tuk-green hover:text-green-800 text-xs font-semibold underline">My ID Dashboard →</a>
+                        <span class="text-gray-300">|</span>
+                        <button onclick="logout()" class="text-red-500 hover:text-red-800 text-xs font-semibold underline">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -148,9 +150,20 @@
     </footer>
 
     <script>
+        // ── Auth guard ────────────────────────────────────────────────────────
+        const token = sessionStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
         // ─── API Configuration ────────────────────────────────────────────────
-        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com'; // local: 'http://localhost:3000'
+        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com';
         // ─────────────────────────────────────────────────────────────────────
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
 
         let activeTab = 'charge';
 
@@ -208,9 +221,17 @@
             try {
                 const res = await fetch(`${API_BASE}/pay`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + sessionStorage.getItem('adminToken')
+                    },
                     body: JSON.stringify({ nfc_uid: nfcUid, amount, service_point: servicePoint })
                 });
+
+                if (res.status === 401 || res.status === 403) {
+                    return logout();
+                }
+
                 const data = await res.json();
 
                 if (res.ok && data.success) {
@@ -239,9 +260,17 @@
             try {
                 const res = await fetch(`${API_BASE}/topup`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + sessionStorage.getItem('adminToken')
+                    },
                     body: JSON.stringify({ reg_number: regNumber, amount })
                 });
+
+                if (res.status === 401 || res.status === 403) {
+                    return logout();
+                }
+
                 const data = await res.json();
 
                 if (res.ok && data.success) {
@@ -261,7 +290,16 @@
         // Load & Update Recent Transactions
         async function updateTransactions() {
             try {
-                const res = await fetch(`${API_BASE}/transactions`);
+                const res = await fetch(`${API_BASE}/transactions`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + sessionStorage.getItem('adminToken')
+                    }
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    return logout();
+                }
+
                 const txs = await res.json();
                 const feed = document.getElementById('transactionFeed');
 
