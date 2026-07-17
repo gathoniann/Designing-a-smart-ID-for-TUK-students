@@ -328,7 +328,7 @@ app.get('/student/:reg_number', authenticateToken, requireStudent, async (req, r
     const { reg_number } = req.params;
 
     try {
-        const studentQuery = 'SELECT student_name, fee_status, nfc_uid, program, wallet_balance FROM students WHERE reg_number = $1';
+        const studentQuery = 'SELECT student_name, fee_status, nfc_uid, program, wallet_balance, allowed_facilities FROM students WHERE reg_number = $1';
         const studentResult = await pool.query(studentQuery, [reg_number]);
 
         if (studentResult.rows.length === 0) {
@@ -349,6 +349,7 @@ app.get('/student/:reg_number', authenticateToken, requireStudent, async (req, r
             nfc_uid:        student.nfc_uid,
             program:        student.program,
             wallet_balance: student.wallet_balance,
+            allowed_facilities: student.allowed_facilities,
             logs:           logsResult.rows,
             transactions:   transactionsResult.rows
         });
@@ -647,6 +648,47 @@ app.post('/student/activate-card', async (req, res) => {
     } catch (err) {
         const msg = err.message || err.toString();
         console.error('Card activation error:', msg);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+});
+
+/**
+ * ADMIN UPDATE FACILITIES ROUTE
+ * Updates a student's allowed facilities using their Registration Number.
+ * Protected by admin authorization.
+ */
+app.post('/admin/student/:reg_number/facilities', authenticateToken, requireAdmin, async (req, res) => {
+    const { reg_number } = req.params;
+    const { allowed_facilities } = req.body;
+
+    if (allowed_facilities === undefined) {
+        return res.status(400).json({ success: false, message: 'allowed_facilities is required.' });
+    }
+
+    const regUpper = reg_number.trim().toUpperCase();
+    const facilitiesVal = allowed_facilities.trim();
+
+    try {
+        const studentQuery = 'SELECT student_name FROM students WHERE reg_number = $1';
+        const result = await pool.query(studentQuery, [regUpper]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Student not found.' });
+        }
+
+        // Update database
+        await pool.query('UPDATE students SET allowed_facilities = $1 WHERE reg_number = $2', [facilitiesVal, regUpper]);
+
+        res.json({
+            success: true,
+            message: 'Allowed facilities updated successfully.',
+            student_name: result.rows[0].student_name,
+            reg_number: regUpper,
+            allowed_facilities: facilitiesVal
+        });
+    } catch (err) {
+        const msg = err.message || err.toString();
+        console.error('Update facilities error:', msg);
         res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 });
