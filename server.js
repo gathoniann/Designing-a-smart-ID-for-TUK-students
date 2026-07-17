@@ -323,19 +323,22 @@ app.post('/verify', authenticateToken, requireAdmin, async (req, res) => {
                 return res.json({ status: 'Access Denied', message: 'Unauthorized Facility Access' });
             }
 
-            // 2. Verify Fee Status
+            // 2. Exam Room Restriction check: restrict entry to exam rooms if fees are pending
+            const isExamFacility = facility.toLowerCase().includes('exam');
             const isCleared = student.fee_status === true;
-            if (isCleared) {
-                const status = 'Access Granted';
-                logAccessAndBroadcast(student.student_name, student.reg_number, status, facility);
 
-                res.json({ status: 'Access Granted', name: student.student_name, reg: student.reg_number });
-            } else {
+            if (isExamFacility && !isCleared) {
                 const status = 'Access Denied: Fee Balance';
                 logAccessAndBroadcast(student.student_name, student.reg_number, status, facility);
 
-                res.json({ status: 'Access Denied', message: 'Fee Balance Pending' });
+                return res.json({ status: 'Access Denied', message: 'Fee Balance Pending (Exam Restriction)' });
             }
+
+            // Otherwise, they are allowed access to standard facilities
+            const status = 'Access Granted';
+            logAccessAndBroadcast(student.student_name, student.reg_number, status, facility);
+
+            res.json({ status: 'Access Granted', name: student.student_name, reg: student.reg_number });
         } else {
             res.json({ status: 'Access Denied', message: 'Unknown Card' });
         }

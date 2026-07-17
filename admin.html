@@ -119,6 +119,7 @@
                             <option value="Main Library">Main Library</option>
                             <option value="Computer Science Lab">Computer Science Lab</option>
                             <option value="Engineering Lab">Engineering Lab</option>
+                            <option value="Exam Room">Exam Room</option>
                         </select>
                     </div>
 
@@ -206,6 +207,14 @@
                                 <div>
                                     <span class="text-sm font-bold text-gray-800">Engineering Lab</span>
                                     <p class="text-[10px] text-gray-400 font-medium uppercase">Engineering Workshops & Laboratories Gate</p>
+                                </div>
+                            </label>
+
+                            <label class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all">
+                                <input type="checkbox" id="fac-examroom" value="Exam Room" class="w-4 h-4 text-tuk-green border-gray-300 rounded focus:ring-0">
+                                <div>
+                                    <span class="text-sm font-bold text-gray-800">Exam Room</span>
+                                    <p class="text-[10px] text-gray-400 font-medium uppercase">Examination Halls & Rooms Gate</p>
                                 </div>
                             </label>
                         </div>
@@ -462,6 +471,7 @@
                     document.getElementById('fac-mainlibrary').checked = allowedList.includes('Main Library');
                     document.getElementById('fac-cslab').checked = allowedList.includes('Computer Science Lab');
                     document.getElementById('fac-englab').checked = allowedList.includes('Engineering Lab');
+                    document.getElementById('fac-examroom').checked = allowedList.includes('Exam Room');
 
                     panel.classList.remove('hidden');
                 } else {
@@ -489,6 +499,7 @@
             if (document.getElementById('fac-mainlibrary').checked) selected.push('Main Library');
             if (document.getElementById('fac-cslab').checked) selected.push('Computer Science Lab');
             if (document.getElementById('fac-englab').checked) selected.push('Engineering Lab');
+            if (document.getElementById('fac-examroom').checked) selected.push('Exam Room');
 
             const allowedStr = selected.join(', ');
 
