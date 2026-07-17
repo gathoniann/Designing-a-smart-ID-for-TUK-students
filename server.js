@@ -572,6 +572,86 @@ app.post('/student/:reg_number/topup', authenticateToken, requireStudent, async 
 });
 
 /**
+ * CARD ACTIVATION ROUTE
+ * Associates a new physical NFC Card UID with a student's Registration Number.
+ * Public endpoint (does not require JWT because user is in login screen),
+ * but validates identity using password verification.
+ */
+app.post('/student/activate-card', async (req, res) => {
+    const { reg_number, password, nfc_uid } = req.body;
+
+    if (!reg_number || !password || !nfc_uid) {
+        return res.status(400).json({ success: false, message: 'Registration number, password, and NFC UID are required.' });
+    }
+
+    const regUpper = reg_number.trim().toUpperCase();
+    const uidUpper = nfc_uid.trim().toUpperCase();
+
+    if (uidUpper.length < 4 || uidUpper.length > 20) {
+        return res.status(400).json({ success: false, message: 'NFC UID must be between 4 and 20 characters.' });
+    }
+
+    try {
+        const studentQuery = 'SELECT student_name, password FROM students WHERE reg_number = $1';
+        const result = await pool.query(studentQuery, [regUpper]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Student not found.' });
+        }
+
+        const student = result.rows[0];
+        const dbPassword = student.password;
+        let isMatch = false;
+
+        // Lazy Migration check
+        if (dbPassword.length === 128) {
+            isMatch = (hashOldPassword(password) === dbPassword);
+            if (isMatch) {
+                try {
+                    const hashedNew = await bcrypt.hash(password, 10);
+                    await pool.query('UPDATE students SET password = $1 WHERE reg_number = $2', [hashedNew, regUpper]);
+                    console.log(`Successfully upgraded password hash to Bcrypt for student: ${regUpper}`);
+                } catch (migrationErr) {
+                    console.error('Password hash upgrade failed during activation:', migrationErr.message);
+                }
+            }
+        } else {
+            isMatch = await bcrypt.compare(password, dbPassword);
+        }
+
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: 'Invalid registration number or password.' });
+        }
+
+        // Verify if card is already registered to ANOTHER student
+        const checkCardQuery = 'SELECT reg_number, student_name FROM students WHERE nfc_uid = $1 AND reg_number != $2';
+        const cardCheck = await pool.query(checkCardQuery, [uidUpper, regUpper]);
+
+        if (cardCheck.rows.length > 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `This NFC card is already registered to another student.` 
+            });
+        }
+
+        // Update the card details
+        await pool.query('UPDATE students SET nfc_uid = $1 WHERE reg_number = $2', [uidUpper, regUpper]);
+
+        res.json({
+            success: true,
+            message: 'NFC Smart ID Card activated successfully.',
+            student_name: student.student_name,
+            reg_number: regUpper,
+            nfc_uid: uidUpper
+        });
+    } catch (err) {
+        const msg = err.message || err.toString();
+        console.error('Card activation error:', msg);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
+    }
+});
+
+/**
  * RECENT TRANSACTIONS ROUTE
  * Displays the 10 most recent campus wallet transactions.
  */

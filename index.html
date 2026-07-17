@@ -194,7 +194,7 @@
                     <!-- Links -->
                     <div class="flex flex-col items-center gap-2 mt-6">
                         <a href="#" class="text-sm font-semibold text-tuk-blue hover:underline">Forgot Password?</a>
-                        <a href="#" class="text-sm font-semibold text-tuk-blue hover:underline">Activate New NFC Card</a>
+                        <a href="javascript:void(0)" onclick="openActivationModal()" class="text-sm font-semibold text-tuk-blue hover:underline">Activate New NFC Card</a>
                     </div>
                 </div>
             </div>
@@ -209,6 +209,110 @@
         </div>
 
     </main>
+
+    <!-- ── CARD ACTIVATION MODAL ────────────────────────────────────── -->
+    <div id="activationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md mx-4 overflow-hidden transform scale-95 transition-transform duration-300">
+            <!-- Modal Header -->
+            <div class="bg-gray-100 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-tuk-blue font-bold uppercase tracking-wider text-sm flex items-center gap-1.5">
+                    🎴 NFC Card Activation
+                </h3>
+                <button onclick="closeActivationModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Steps) -->
+            <div class="p-6">
+                <!-- Progress Indicators -->
+                <div class="flex items-center justify-between mb-8">
+                    <div class="flex flex-col items-center">
+                        <span id="step1-badge" class="w-8 h-8 rounded-full bg-tuk-green text-white font-bold flex items-center justify-center text-sm shadow-sm transition-all">1</span>
+                        <span class="text-[9px] font-bold text-gray-500 uppercase mt-1">Verify Account</span>
+                    </div>
+                    <div class="flex-grow border-t-2 border-gray-200 mx-2 -mt-4" id="step1-line"></div>
+                    <div class="flex flex-col items-center">
+                        <span id="step2-badge" class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 font-bold flex items-center justify-center text-sm transition-all">2</span>
+                        <span class="text-[9px] font-bold text-gray-500 uppercase mt-1">Scan NFC UID</span>
+                    </div>
+                    <div class="flex-grow border-t-2 border-gray-200 mx-2 -mt-4" id="step2-line"></div>
+                    <div class="flex flex-col items-center">
+                        <span id="step3-badge" class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 font-bold flex items-center justify-center text-sm transition-all">3</span>
+                        <span class="text-[9px] font-bold text-gray-500 uppercase mt-1">Confirm</span>
+                    </div>
+                </div>
+
+                <!-- STEP 1: Verify Account Credentials -->
+                <div id="activation-step1" class="space-y-4">
+                    <div class="bg-blue-50 border-l-4 border-tuk-blue p-3 text-tuk-blue text-xs font-semibold">
+                        🔒 Please verify your student identity to begin card activation.
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-2">Registration Number</label>
+                        <input type="text" id="activateReg" class="input-field uppercase font-mono" placeholder="e.g. AIIM/00476/2022">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-2">Student Password</label>
+                        <div class="relative">
+                            <input type="password" id="activatePassword" class="input-field pr-10" placeholder="Enter student password">
+                            <button type="button" onclick="togglePwd('activatePassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-tuk-blue">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: NFC Scan Details -->
+                <div id="activation-step2" class="space-y-4 hidden">
+                    <div class="bg-green-50 border-l-4 border-tuk-green p-3 text-tuk-green text-xs font-semibold">
+                        📲 Tap your physical card on the NFC reader, or simulate a tap below.
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-2">New NFC UID</label>
+                        <input type="text" id="activateNfcUid" class="input-field uppercase tracking-wider font-mono text-center text-xl" placeholder="E.g. A1B2C3D4">
+                    </div>
+                    <button onclick="simulateNfcTap()" class="w-full border border-tuk-green text-tuk-green font-bold py-2 rounded hover:bg-green-50 transition-colors text-xs uppercase tracking-wider">
+                        Simulate Card Tap 📶
+                    </button>
+                </div>
+
+                <!-- STEP 3: Confirm Activation details -->
+                <div id="activation-step3" class="space-y-4 hidden">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 text-yellow-800 text-xs font-semibold">
+                        ⚠️ Please review your card details before confirming activation.
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400 font-medium">Student Name:</span>
+                            <span id="confirmName" class="font-bold text-gray-800"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400 font-medium">Reg Number:</span>
+                            <span id="confirmReg" class="font-bold font-mono text-gray-800"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400 font-medium">New NFC UID:</span>
+                            <span id="confirmNfcUid" class="font-bold font-mono text-tuk-green tracking-wider"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Display Inside Modal -->
+                <div id="activationFeedback" class="hidden mt-4 bg-red-50 border-l-4 border-red-500 p-3 text-red-700 text-xs font-medium"></div>
+
+                <!-- Navigation Controls -->
+                <div class="flex gap-3 mt-8">
+                    <button id="btnActivatePrev" onclick="prevStep()" class="flex-1 border border-gray-300 font-bold py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors text-sm uppercase tracking-wider hidden">
+                        Back
+                    </button>
+                    <button id="btnActivateNext" onclick="nextStep()" class="flex-1 bg-tuk-green text-white font-bold py-3 px-4 rounded-lg hover:bg-green-800 transition-colors shadow-md text-sm uppercase tracking-wider">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 4. Footer -->
     <footer class="bg-tuk-blue py-6 px-6 md:px-12 text-white relative z-20 mt-auto">
@@ -325,6 +429,215 @@
                 } finally {
                     setLoading(false);
                 }
+            }
+        }
+
+        // ─── Card Activation Wizard JS Controls ────────────────────────────────
+        let currentActivationStep = 1;
+        let verifiedName = '';
+
+        function openActivationModal() {
+            currentActivationStep = 1;
+            verifiedName = '';
+            
+            document.getElementById('activateReg').value = '';
+            document.getElementById('activatePassword').value = '';
+            document.getElementById('activateNfcUid').value = '';
+            
+            showActivationStep(1);
+            hideActivationFeedback();
+            
+            document.getElementById('activationModal').classList.remove('hidden');
+        }
+
+        function closeActivationModal() {
+            document.getElementById('activationModal').classList.add('hidden');
+        }
+
+        function showActivationStep(step) {
+            currentActivationStep = step;
+            
+            document.getElementById('activation-step1').classList.toggle('hidden', step !== 1);
+            document.getElementById('activation-step2').classList.toggle('hidden', step !== 2);
+            document.getElementById('activation-step3').classList.toggle('hidden', step !== 3);
+            
+            // Toggle Back Button
+            document.getElementById('btnActivatePrev').classList.toggle('hidden', step === 1);
+            
+            // Update Next Button Text
+            const btnNext = document.getElementById('btnActivateNext');
+            if (step === 3) {
+                btnNext.innerHTML = '<span>Confirm & Activate</span>';
+                btnNext.className = 'flex-1 bg-tuk-blue text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-900 transition-colors shadow-md text-sm uppercase tracking-wider';
+            } else {
+                btnNext.innerHTML = '<span>Next</span>';
+                btnNext.className = 'flex-1 bg-tuk-green text-white font-bold py-3 px-4 rounded-lg hover:bg-green-800 transition-colors shadow-md text-sm uppercase tracking-wider';
+            }
+
+            // Update Badge Colors
+            updateStepIndicator(1, step >= 1);
+            updateStepIndicator(2, step >= 2);
+            updateStepIndicator(3, step >= 3);
+        }
+
+        function updateStepIndicator(step, active) {
+            const badge = document.getElementById(`step${step}-badge`);
+            const line = document.getElementById(`step${step - 1}-line`);
+
+            if (active) {
+                badge.className = 'w-8 h-8 rounded-full bg-tuk-green text-white font-bold flex items-center justify-center text-sm shadow-sm transition-all';
+                if (line) line.className = 'flex-grow border-t-2 border-tuk-green mx-2 -mt-4 transition-all';
+            } else {
+                badge.className = 'w-8 h-8 rounded-full bg-gray-200 text-gray-500 font-bold flex items-center justify-center text-sm transition-all';
+                if (line) line.className = 'flex-grow border-t-2 border-gray-200 mx-2 -mt-4 transition-all';
+            }
+        }
+
+        function showActivationFeedback(msg) {
+            const el = document.getElementById('activationFeedback');
+            el.innerText = '⚠️ ' + msg;
+            el.classList.remove('hidden');
+        }
+
+        function hideActivationFeedback() {
+            document.getElementById('activationFeedback').classList.add('hidden');
+        }
+
+        function prevStep() {
+            hideActivationFeedback();
+            if (currentActivationStep > 1) {
+                showActivationStep(currentActivationStep - 1);
+            }
+        }
+
+        async function nextStep() {
+            hideActivationFeedback();
+            
+            if (currentActivationStep === 1) {
+                const reg = document.getElementById('activateReg').value.trim();
+                const pwd = document.getElementById('activatePassword').value.trim();
+
+                if (!reg || !pwd) {
+                    return showActivationFeedback('Please enter both your Registration Number and Password.');
+                }
+
+                // Verify student identity using backend login
+                const btnNext = document.getElementById('btnActivateNext');
+                btnNext.disabled = true;
+                btnNext.innerText = 'Verifying...';
+
+                try {
+                    const res = await fetch(`${API_BASE}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reg_number: reg, password: pwd })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        verifiedName = data.name;
+                        showActivationStep(2);
+                    } else {
+                        showActivationFeedback(data.message || 'Verification failed. Please check credentials.');
+                    }
+                } catch (err) {
+                    showActivationFeedback('Connection error. Please try again.');
+                } finally {
+                    btnNext.disabled = false;
+                    btnNext.innerText = 'Next';
+                }
+
+            } else if (currentActivationStep === 2) {
+                const uid = document.getElementById('activateNfcUid').value.trim();
+
+                if (!uid || uid.length < 4 || uid.length > 20) {
+                    return showActivationFeedback('Please tap a valid card or enter a 4-20 char NFC UID.');
+                }
+
+                // Populate Step 3 Confirmation Details
+                document.getElementById('confirmName').innerText = verifiedName;
+                document.getElementById('confirmReg').innerText = document.getElementById('activateReg').value.trim().toUpperCase();
+                document.getElementById('confirmNfcUid').innerText = uid.toUpperCase();
+
+                showActivationStep(3);
+
+            } else if (currentActivationStep === 3) {
+                // Confirm & Submit
+                submitActivation();
+            }
+        }
+
+        function simulateNfcTap() {
+            hideActivationFeedback();
+            // Generate a random 8-character hex UID
+            const randomUid = Math.floor((1 + Math.random()) * 0x100000000).toString(16).substring(1).toUpperCase();
+            document.getElementById('activateNfcUid').value = randomUid;
+        }
+
+        async function submitActivation() {
+            const reg = document.getElementById('activateReg').value.trim().toUpperCase();
+            const pwd = document.getElementById('activatePassword').value.trim();
+            const uid = document.getElementById('activateNfcUid').value.trim().toUpperCase();
+
+            const btnNext = document.getElementById('btnActivateNext');
+            const btnPrev = document.getElementById('btnActivatePrev');
+            
+            btnNext.disabled = true;
+            btnPrev.disabled = true;
+            btnNext.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white inline-block mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Activating...</span>
+            `;
+
+            try {
+                const res = await fetch(`${API_BASE}/student/activate-card`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reg_number: reg, password: pwd, nfc_uid: uid })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    // Show success state
+                    const feedback = document.getElementById('activationFeedback');
+                    feedback.className = 'mt-4 bg-green-50 border-l-4 border-tuk-green p-3 text-green-700 text-xs font-semibold';
+                    feedback.innerHTML = `🎉 Card activated successfully for ${data.student_name}! Redirecting...`;
+                    feedback.classList.remove('hidden');
+
+                    // Fetch login token to auto-log student in
+                    const loginRes = await fetch(`${API_BASE}/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reg_number: reg, password: pwd })
+                    });
+                    const loginData = await loginRes.json();
+                    
+                    setTimeout(() => {
+                        if (loginRes.ok && loginData.success) {
+                            sessionStorage.setItem('regNumber', reg);
+                            sessionStorage.setItem('studentToken', loginData.token);
+                            window.location.href = 'student.html';
+                        } else {
+                            closeActivationModal();
+                            showError('Card activated! Please log in with your credentials.');
+                        }
+                    }, 2000);
+
+                } else {
+                    showActivationFeedback(data.message || 'Card activation failed.');
+                    btnNext.disabled = false;
+                    btnPrev.disabled = false;
+                    btnNext.innerHTML = '<span>Confirm & Activate</span>';
+                }
+            } catch (err) {
+                showActivationFeedback('Connection error. Please try again.');
+                btnNext.disabled = false;
+                btnPrev.disabled = false;
+                btnNext.innerHTML = '<span>Confirm & Activate</span>';
             }
         }
     </script>
