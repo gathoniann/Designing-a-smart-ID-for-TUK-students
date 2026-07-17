@@ -5,12 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TUK Smart ID | Merchant POS Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tuk: {
+                            blue: '#0F172A',
+                            blueSecondary: '#1E293B',
+                            green: '#059669',
+                            greenHover: '#047857',
+                            light: '#F8FAFC',
+                            accent: '#3B82F6',
+                            accentGreen: '#10B981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .tuk-green { background-color: #006400; } 
-        .text-tuk-green { color: #006400; }
-        .border-tuk-green { border-color: #006400; }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-outfit { font-family: 'Outfit', sans-serif; }
+        .tuk-green { background-color: #059669; } 
+        .text-tuk-green { color: #059669; }
+        .border-tuk-green { border-color: #059669; }
         
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(15px); }
@@ -181,7 +205,7 @@
             const isCharge = tab === 'charge';
 
             document.getElementById('tab-charge').className = `flex-1 py-4 text-center font-bold text-sm transition-all ${isCharge ? 'text-tuk-green border-b-2 border-tuk-green' : 'text-gray-400 border-b-2 border-transparent'}`;
-            document.getElementById('tab-topup').className = `flex-1 py-4 text-center font-bold text-sm transition-all ${!isCharge ? 'text-blue-700 border-b-2 border-blue-700' : 'text-gray-400 border-b-2 border-transparent'}`;
+            document.getElementById('tab-topup').className = `flex-1 py-4 text-center font-bold text-sm transition-all ${!isCharge ? 'text-tuk-green border-b-2 border-tuk-green' : 'text-gray-400 border-b-2 border-transparent'}`;
 
             document.getElementById('chargeSection').classList.toggle('hidden', !isCharge);
             document.getElementById('topupSection').classList.toggle('hidden', isCharge);
@@ -202,7 +226,7 @@
             banner.classList.remove('hidden');
             
             if (type === 'success') {
-                banner.className = 'p-4 rounded-lg border-2 text-center font-bold text-sm animate-reveal bg-green-50 border-green-600 text-green-700';
+                banner.className = 'p-4 rounded-lg border-2 text-center font-bold text-sm animate-reveal bg-emerald-50 border-emerald-600 text-emerald-700';
             } else {
                 banner.className = 'p-4 rounded-lg border-2 text-center font-bold text-sm animate-reveal bg-red-50 border-red-600 text-red-700';
             }

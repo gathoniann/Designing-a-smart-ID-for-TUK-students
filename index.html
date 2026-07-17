@@ -6,20 +6,23 @@
     <title>TUK Smart ID | Login</title>
     <meta name="description" content="TUK Smart ID System — Secure login for students and administrators at the Technical University of Kenya.">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         tuk: {
-                            blue: '#1E3A8A', // Deep Blue
-                            green: '#006400', // Deep Green
-                            light: '#F3F4F6'
+                            blue: '#0F172A', // Premium Slate Midnight
+                            blueSecondary: '#1E293B',
+                            green: '#059669', // Premium Emerald Green
+                            greenHover: '#047857',
+                            light: '#F8FAFC'
                         }
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif']
                     }
                 }
             }
@@ -27,51 +30,61 @@
     </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-outfit { font-family: 'Outfit', sans-serif; }
         
         /* Subtle Tech Background */
         .bg-tech-pattern {
-            background-color: #F3F4F6;
-            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-color: #F8FAFC;
+            background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
         }
 
         .tab-active {
-            color: #1E3A8A;
-            border-bottom: 2px solid #006400;
+            color: #059669;
+            border-bottom: 2px solid #059669;
         }
         .tab-inactive {
-            color: #9CA3AF;
+            color: #94A3B8;
             border-bottom: 2px solid transparent;
         }
 
         .input-field {
             width: 100%;
             padding: 0.75rem 1rem;
-            border: 1px solid #E5E7EB;
+            border: 1px solid #E2E8F0;
             border-radius: 0.5rem;
-            background-color: #F3F4F6;
+            background-color: #F8FAFC;
             font-size: 0.95rem;
             outline: none;
-            transition: border-color 0.2s, background-color 0.2s;
+            transition: all 0.2s ease-in-out;
         }
         .input-field:focus { 
-            border-color: #006400; 
+            border-color: #059669; 
             background-color: #FFFFFF; 
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
         }
 
         .btn-primary {
             width: 100%;
             padding: 0.85rem;
-            background-color: #006400;
+            background-color: #059669;
             color: #FFFFFF;
             font-weight: 600;
             font-size: 1rem;
             border: none;
             border-radius: 0.5rem;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.15), 0 2px 4px -1px rgba(5, 150, 105, 0.06);
         }
-        .btn-primary:hover:not(:disabled) { background-color: #004d00; }
+        .btn-primary:hover:not(:disabled) { 
+            background-color: #047857; 
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.2), 0 4px 6px -2px rgba(5, 150, 105, 0.1);
+        }
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
         .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
         @keyframes shake {

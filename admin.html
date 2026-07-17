@@ -5,18 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TUK Smart ID | Student Portal Integration</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tuk: {
+                            blue: '#0F172A',
+                            blueSecondary: '#1E293B',
+                            green: '#059669',
+                            greenHover: '#047857',
+                            light: '#F8FAFC',
+                            accent: '#3B82F6',
+                            accentGreen: '#10B981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .tuk-green { background-color: #006400; } 
-        .text-tuk-green { color: #006400; }
-        .border-tuk-green { border-color: #006400; }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-outfit { font-family: 'Outfit', sans-serif; }
+        .tuk-green { background-color: #059669; } 
+        .text-tuk-green { color: #059669; }
+        .border-tuk-green { border-color: #059669; }
         
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-reveal { animation: slideUp 0.3s ease-out forwards; }
+
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0px rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+        }
+        .glow-success { animation: pulse-green 1.5s infinite; }
+        .glow-error { animation: pulse-red 1.5s infinite; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen text-gray-800">
@@ -307,16 +342,16 @@
             display.classList.remove('hidden');
             
             if (data.status === 'Access Granted') {
-                display.className = "mt-8 p-6 rounded-lg border-2 border-green-600 bg-green-50 animate-reveal block";
-                statusTitle.className = "text-2xl font-black mb-2 text-green-700";
+                display.className = "mt-8 p-6 rounded-lg border-2 border-emerald-600 bg-emerald-50/70 text-center glow-success block animate-reveal";
+                statusTitle.className = "text-2xl font-black mb-2 text-emerald-700 tracking-wider";
                 statusTitle.innerText = "ACCESS GRANTED";
                 iconDiv.innerText = "✅";
                 nameDiv.innerText = data.name;
                 regDiv.innerText = data.reg;
                 errorDiv.innerText = "";
             } else {
-                display.className = "mt-8 p-6 rounded-lg border-2 border-red-600 bg-red-50 animate-reveal block";
-                statusTitle.className = "text-2xl font-black mb-2 text-red-700";
+                display.className = "mt-8 p-6 rounded-lg border-2 border-red-600 bg-red-50/70 text-center glow-error block animate-reveal shake";
+                statusTitle.className = "text-2xl font-black mb-2 text-red-700 tracking-wider";
                 statusTitle.innerText = "ACCESS DENIED";
                 iconDiv.innerText = "❌";
                 nameDiv.innerText = "";
