@@ -95,5 +95,40 @@ INSERT INTO transactions (reg_number, service_point, amount, transaction_type, t
 SELECT 'ABBQ/00001/2021', 'Online Top-Up', 1500.00, 'CREDIT', NOW() - INTERVAL '2 days'
 WHERE NOT EXISTS (SELECT 1 FROM transactions WHERE reg_number = 'ABBQ/00001/2021');
 
+-- Seed historical access logs for the last 3 days
+INSERT INTO access_logs (student_name, reg_number, status, facility, access_time)
+SELECT name, reg, status, facility, time FROM (VALUES
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'Access Granted', 'Main Gate', NOW() - INTERVAL '1 hour'),
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'Access Granted', 'Main Library', NOW() - INTERVAL '1.5 hours'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'Access Granted', 'Main Gate', NOW() - INTERVAL '2 hours'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'Access Granted', 'Computer Science Lab', NOW() - INTERVAL '2.5 hours'),
+    ('John Kamau',     'SBFE/02145/2022', 'Access Denied: Fee Balance', 'Main Gate', NOW() - INTERVAL '3 hours'),
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'Access Denied: Unauthorized Facility', 'Computer Science Lab', NOW() - INTERVAL '4 hours'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'Access Granted', 'Engineering Lab', NOW() - INTERVAL '6 hours'),
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'Access Granted', 'Main Gate', NOW() - INTERVAL '12 hours'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'Access Granted', 'Main Gate', NOW() - INTERVAL '14 hours'),
+    ('John Kamau',     'SBFE/02145/2022', 'Access Denied: Fee Balance', 'Main Library', NOW() - INTERVAL '1 day'),
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'Access Granted', 'Main Library', NOW() - INTERVAL '1.2 days'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'Access Granted', 'Main Gate', NOW() - INTERVAL '1.5 days'),
+    ('John Kamau',     'SBFE/02145/2022', 'Access Denied: Fee Balance', 'Main Gate', NOW() - INTERVAL '1.8 days'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'Access Granted', 'Main Library', NOW() - INTERVAL '2 days'),
+    ('Jane Wanjiku',   'AIIM/00476/2022', 'Access Granted', 'Main Gate', NOW() - INTERVAL '2.2 days'),
+    ('Alice Akinyi',   'ABBQ/00001/2021', 'Access Granted', 'Main Gate', NOW() - INTERVAL '2.5 days')
+) AS tmp(name, reg, status, facility, time)
+WHERE NOT EXISTS (SELECT 1 FROM access_logs);
+
+-- Seed historical transactions
+INSERT INTO transactions (reg_number, service_point, amount, transaction_type, transaction_time)
+SELECT reg, service, amt, type, time FROM (VALUES
+    ('AIIM/00476/2022', 'Student Cafeteria', 80.00, 'DEBIT', NOW() - INTERVAL '3 hours'),
+    ('ABBQ/00001/2021', 'Student Cafeteria', 120.00, 'DEBIT', NOW() - INTERVAL '5 hours'),
+    ('AIIM/00476/2022', 'Library Printing', 20.00, 'DEBIT', NOW() - INTERVAL '1 day'),
+    ('ABBQ/00001/2021', 'Campus Laundry', 40.00, 'DEBIT', NOW() - INTERVAL '1.5 days'),
+    ('SBFE/02145/2022', 'TUK Bookshop', 50.00, 'DEBIT', NOW() - INTERVAL '2 days'),
+    ('AIIM/00476/2022', 'Online M-Pesa', 200.00, 'CREDIT', NOW() - INTERVAL '2.1 days'),
+    ('ABBQ/00001/2021', 'Online Card', 500.00, 'CREDIT', NOW() - INTERVAL '2.8 days')
+) AS tmp(reg, service, amt, type, time)
+WHERE (SELECT COUNT(*) FROM transactions) <= 3;
+
 
 
