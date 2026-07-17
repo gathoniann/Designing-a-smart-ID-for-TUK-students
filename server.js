@@ -29,7 +29,8 @@ function hashOldPassword(password) {
  */
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Expecting "Bearer <token>"
+    // Allow token to be extracted from Authorization header or from "token" query parameter (fallback for EventSource/SSE)
+    const token = (authHeader && authHeader.split(' ')[1]) || req.query.token;
 
     if (!token) {
         return res.status(401).json({ success: false, message: 'Access Denied. No token provided.' });
@@ -61,6 +62,54 @@ function requireStudent(req, res, next) {
     }
     return res.status(403).json({ success: false, message: 'Access Denied. Unauthorized access to this profile.' });
 }
+
+// ─── SERVER-SENT EVENTS (SSE) FOR REAL-TIME STREAMING ───────────────────
+let sseClients = [];
+
+function broadcastEvent(type, data) {
+    const payload = JSON.stringify({ type, data });
+    sseClients.forEach(c => {
+        try {
+            c.res.write(`data: ${payload}\n\n`);
+        } catch (e) {
+            console.error("SSE write error:", e.message);
+        }
+    });
+}
+
+function logAccessAndBroadcast(student_name, reg_number, status, facility) {
+    const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
+    pool.query(logQuery, [student_name, reg_number, status, facility])
+        .then(() => {
+            broadcastEvent('access_log', {
+                student_name,
+                reg_number,
+                status,
+                facility,
+                access_time: new Date()
+            });
+        })
+        .catch(logErr => console.error('Logging failed:', logErr.message));
+}
+
+app.get('/events', authenticateToken, (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+
+    // Send initial comment to establish connection
+    res.write(': sse connection established\n\n');
+
+    const clientId = Date.now();
+    const newClient = { id: clientId, res };
+    sseClients.push(newClient);
+
+    req.on('close', () => {
+        sseClients = sseClients.filter(c => c.id !== clientId);
+    });
+});
 
 
 
@@ -269,9 +318,7 @@ app.post('/verify', authenticateToken, requireAdmin, async (req, res) => {
 
             if (!isAllowedFacility) {
                 const status = 'Access Denied: Unauthorized Facility';
-                const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
-                pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
-                    .catch(logErr => console.error('Logging failed:', logErr.message));
+                logAccessAndBroadcast(student.student_name, student.reg_number, status, facility);
                 
                 return res.json({ status: 'Access Denied', message: 'Unauthorized Facility Access' });
             }
@@ -280,16 +327,12 @@ app.post('/verify', authenticateToken, requireAdmin, async (req, res) => {
             const isCleared = student.fee_status === true;
             if (isCleared) {
                 const status = 'Access Granted';
-                const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
-                pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
-                    .catch(logErr => console.error('Logging failed:', logErr.message));
+                logAccessAndBroadcast(student.student_name, student.reg_number, status, facility);
 
                 res.json({ status: 'Access Granted', name: student.student_name, reg: student.reg_number });
             } else {
                 const status = 'Access Denied: Fee Balance';
-                const logQuery = 'INSERT INTO access_logs (student_name, reg_number, status, facility) VALUES ($1, $2, $3, $4)';
-                pool.query(logQuery, [student.student_name, student.reg_number, status, facility])
-                    .catch(logErr => console.error('Logging failed:', logErr.message));
+                logAccessAndBroadcast(student.student_name, student.reg_number, status, facility);
 
                 res.json({ status: 'Access Denied', message: 'Fee Balance Pending' });
             }
@@ -411,6 +454,15 @@ app.post('/pay', authenticateToken, requireAdmin, async (req, res) => {
 
             await client.query('COMMIT');
 
+            broadcastEvent('transaction', {
+                student_name: student.student_name,
+                reg_number: student.reg_number,
+                service_point: service_point,
+                amount: paymentAmount,
+                transaction_type: 'DEBIT',
+                transaction_time: new Date()
+            });
+
             res.json({
                 success: true,
                 message: 'Payment Successful',
@@ -475,6 +527,15 @@ app.post('/topup', authenticateToken, requireAdmin, async (req, res) => {
             );
 
             await client.query('COMMIT');
+
+            broadcastEvent('transaction', {
+                student_name: student.student_name,
+                reg_number: reg_number,
+                service_point: 'Cash Desk',
+                amount: topupAmount,
+                transaction_type: 'CREDIT',
+                transaction_time: new Date()
+            });
 
             res.json({
                 success: true,
@@ -551,6 +612,15 @@ app.post('/student/:reg_number/topup', authenticateToken, requireStudent, async 
             );
 
             await client.query('COMMIT');
+
+            broadcastEvent('transaction', {
+                student_name: student.student_name,
+                reg_number: reg_number,
+                service_point: servicePoint,
+                amount: topupAmount,
+                transaction_type: 'CREDIT',
+                transaction_time: new Date()
+            });
 
             res.json({
                 success: true,

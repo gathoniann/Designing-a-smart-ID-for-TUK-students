@@ -336,8 +336,67 @@
             if (e.key === 'Enter') processCharge();
         });
 
+        // ─── Real-Time Live Feed (SSE) ──────────────────────────────────────────
+        function initSseLiveFeed() {
+            const sseToken = sessionStorage.getItem('adminToken');
+            if (!sseToken) return;
+
+            const sse = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(sseToken)}`);
+
+            sse.onmessage = (e) => {
+                try {
+                    const payload = JSON.parse(e.data);
+                    if (payload.type === 'transaction') {
+                        prependTransactionEntry(payload.data);
+                    }
+                } catch (err) {
+                    console.error("SSE parsing error:", err);
+                }
+            };
+
+            sse.onerror = (err) => {
+                console.warn("SSE connection interrupted. Reconnecting...");
+            };
+        }
+
+        function prependTransactionEntry(tx) {
+            const feed = document.getElementById('transactionFeed');
+            
+            // Remove placeholder if present
+            if (feed.querySelector('p.italic')) {
+                feed.innerHTML = '';
+            }
+
+            const isCredit = tx.transaction_type === 'CREDIT';
+            const colorClass = isCredit ? 'border-green-600' : 'border-red-600';
+            const badgeClass = isCredit ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
+            const sign = isCredit ? '+' : '-';
+            const dateStr = new Date(tx.transaction_time).toLocaleTimeString();
+
+            const newTxHtml = `
+                <div class="flex items-center justify-between p-3 rounded bg-gray-50 border-l-4 ${colorClass} animate-reveal" style="animation-name: slideUp; animation-duration: 0.3s; animation-fill-mode: forwards;">
+                    <div>
+                        <p class="font-bold text-xs uppercase text-gray-700">${tx.student_name}</p>
+                        <p class="text-[10px] text-gray-400 font-semibold">${tx.service_point} &bull; ${dateStr}</p>
+                    </div>
+                    <span class="text-[10px] font-black px-2 py-1 rounded border bg-white ${badgeClass} uppercase">
+                        ${sign}KES ${parseFloat(tx.amount).toFixed(2)}
+                    </span>
+                </div>
+            `;
+
+            feed.insertAdjacentHTML('afterbegin', newTxHtml);
+
+            // Keep maximum of 10 items
+            const entries = feed.children;
+            if (entries.length > 10) {
+                feed.removeChild(entries[entries.length - 1]);
+            }
+        }
+
         // Initialize Transactions
         updateTransactions();
+        initSseLiveFeed();
     </script>
 </body>
 </html>

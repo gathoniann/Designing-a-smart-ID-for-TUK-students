@@ -494,10 +494,72 @@
                 feedback.classList.remove('hidden');
             }
         }
+
+        // ─── Real-Time Live Feed (SSE) ──────────────────────────────────────────
+        function initSseLiveFeed() {
+            const sseToken = sessionStorage.getItem('adminToken');
+            if (!sseToken) return;
+
+            const sse = new EventSource(`${API_BASE}/events?token=${encodeURIComponent(sseToken)}`);
+
+            sse.onmessage = (e) => {
+                try {
+                    const payload = JSON.parse(e.data);
+                    if (payload.type === 'access_log') {
+                        prependLogEntry(payload.data);
+                        updateAnalytics();
+                    }
+                } catch (err) {
+                    console.error("SSE parsing error:", err);
+                }
+            };
+
+            sse.onerror = (err) => {
+                console.warn("SSE connection interrupted. Reconnecting...");
+            };
+        }
+
+        function prependLogEntry(l) {
+            const logContainer = document.getElementById('logTable');
+            
+            // Remove placeholder if present
+            if (logContainer.querySelector('p.italic')) {
+                logContainer.innerHTML = '';
+            }
+
+            const isCleared = l.status.startsWith('Access Granted');
+            const colorClass = isCleared ? 'border-green-600' : 'border-red-600';
+            const badgeClass = isCleared ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600';
+            const badgeText = isCleared ? 'Cleared' : 'Blocked';
+
+            const newLogHtml = `
+                <div class="log-entry flex items-center justify-between p-3 rounded bg-gray-50 border-l-4 ${colorClass} animate-reveal">
+                    <div>
+                        <p class="font-bold text-xs uppercase text-gray-700">${l.student_name} (${l.facility})</p>
+                        <p class="text-[10px] font-bold text-tuk-green">${new Date(l.access_time).toLocaleTimeString()}</p>
+                    </div>
+                    <span class="text-[10px] font-black px-2 py-1 rounded border bg-white ${badgeClass} uppercase">
+                        ${badgeText}
+                    </span>
+                </div>
+            `;
+
+            logContainer.insertAdjacentHTML('afterbegin', newLogHtml);
+
+            // Keep maximum of 10 items
+            const entries = logContainer.getElementsByClassName('log-entry');
+            if (entries.length > 10) {
+                logContainer.removeChild(entries[entries.length - 1]);
+            }
+
+            // Re-apply search filter
+            filterLogs();
+        }
         
         loadFacility();
         updateLogs();
         updateAnalytics();
+        initSseLiveFeed();
     </script>
 </body>
 </html>
