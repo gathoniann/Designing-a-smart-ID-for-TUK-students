@@ -181,7 +181,7 @@
         }
 
         // ─── API Configuration ────────────────────────────────────────────────
-        const API_BASE = 'https://designing-a-smart-id-for-tuk-students.onrender.com';
+        const API_BASE = window.location.origin.startsWith('http') ? window.location.origin : 'http://localhost:3000';
         // ─────────────────────────────────────────────────────────────────────
 
         function logout() {
@@ -236,7 +236,7 @@
         async function processCharge() {
             const servicePoint = document.getElementById('servicePoint').value;
             const amount = document.getElementById('chargeAmount').value.trim();
-            const nfcUid = document.getElementById('chargeNfc').value.trim();
+            const nfcUid = document.getElementById('chargeNfc').value.trim().toUpperCase();
 
             if (!amount || !nfcUid) {
                 return showFeedback('⚠️ Please specify both amount and student UID.', 'error');
@@ -358,6 +358,15 @@
         // Allow Enter key to trigger charge/top-up
         document.getElementById('chargeNfc').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') processCharge();
+        });
+        document.getElementById('chargeAmount').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') processCharge();
+        });
+        document.getElementById('topupReg').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') processTopUp();
+        });
+        document.getElementById('topupAmount').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') processTopUp();
         });
 
         // ─── Real-Time Live Feed (SSE) ──────────────────────────────────────────

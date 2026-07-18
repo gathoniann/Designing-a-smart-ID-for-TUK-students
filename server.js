@@ -304,9 +304,11 @@ app.post('/verify', authenticateToken, requireAdmin, async (req, res) => {
         return res.status(400).json({ status: 'Error', message: 'nfc_uid is required' });
     }
 
+    const nfcUidUpper = nfc_uid.trim().toUpperCase();
+
     try {
         const findStudent = 'SELECT * FROM students WHERE nfc_uid = $1';
-        const { rows } = await pool.query(findStudent, [nfc_uid]);
+        const { rows } = await pool.query(findStudent, [nfcUidUpper]);
 
         if (rows.length > 0) {
             const student = rows[0];
@@ -417,6 +419,7 @@ app.post('/pay', authenticateToken, requireAdmin, async (req, res) => {
         return res.status(400).json({ success: false, message: 'Missing payment details.' });
     }
 
+    const nfcUidUpper = nfc_uid.trim().toUpperCase();
     const paymentAmount = parseFloat(amount);
     if (isNaN(paymentAmount) || paymentAmount <= 0) {
         return res.status(400).json({ success: false, message: 'Invalid payment amount.' });
@@ -429,7 +432,7 @@ app.post('/pay', authenticateToken, requireAdmin, async (req, res) => {
 
             // Find student and lock the row for update
             const studentQuery = 'SELECT reg_number, student_name, wallet_balance FROM students WHERE nfc_uid = $1 FOR UPDATE';
-            const studentResult = await client.query(studentQuery, [nfc_uid]);
+            const studentResult = await client.query(studentQuery, [nfcUidUpper]);
 
             if (studentResult.rows.length === 0) {
                 await client.query('ROLLBACK');
