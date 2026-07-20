@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS access_logs (
 CREATE TABLE IF NOT EXISTS admins (
     id          SERIAL PRIMARY KEY,
     username    VARCHAR(100) NOT NULL UNIQUE,
-    password    VARCHAR(255) NOT NULL DEFAULT '$2b$10$lvCJZNd4.bUrnowp8SIQN.3RmyEfd95JKrK1vD1ojyv8PJ.VvwhpK', -- hashed 'admin123' (bcrypt)
+    password    VARCHAR(255) NOT NULL DEFAULT '$2b$10$Ri9aWqZawqnmP9I1bDVCr.eroZWj5QIwyVuEaWShHE6xFlL0tiG0i', -- hashed 'admin321' (bcrypt)
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
@@ -77,7 +77,7 @@ ON CONFLICT (reg_number) DO UPDATE SET
 
 -- Seed administrators
 INSERT INTO admins (username, password) VALUES 
-    ('admin', '$2b$10$lvCJZNd4.bUrnowp8SIQN.3RmyEfd95JKrK1vD1ojyv8PJ.VvwhpK')
+    ('admin', '$2b$10$Ri9aWqZawqnmP9I1bDVCr.eroZWj5QIwyVuEaWShHE6xFlL0tiG0i')
 ON CONFLICT (username) DO UPDATE SET 
     password = EXCLUDED.password;
 
